@@ -21,6 +21,11 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Clean & Pub Get** - Combined clean and pub get with optional pubspec.lock deletion
 - **Pod Install** - Clean and reinstall iOS CocoaPods dependencies
 
+### 🔌 MCP Commands
+
+- **Generate FyUI MCP Config** - Generate Model Context Protocol configuration for FyUI library
+- **Generate Fyers Launch Config** - Generate VS Code launch.json configurations for Fyers App (web + mobile)
+
 ### ✨ Key Capabilities
 
 - **Sidebar UI** - Beautiful sidebar panel with clickable build commands
@@ -62,6 +67,10 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
    - 🔄 **Clean & Pub Get** - Combined clean and pub get
    - 📦 **Pod Install** - Clean and reinstall iOS pods
 
+**MCP Section:**
+   - 📝 **Generate FyUI MCP Config** - Create MCP configuration for FyUI library
+   - 🐛 **Generate Fyers Launch Config** - Create launch.json for Fyers App debugging
+
 4. Follow the prompts:
    - Choose whether to delete `pubspec.lock`
    - For web builds: Enter base-href (default: `/`)
@@ -102,6 +111,34 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Status Bar** (bottom): Shows current build step with spinner
 - **Output Panel**: View → Output → Select "Flutter Build Utils" for detailed logs
 - **Notifications**: Success/error messages appear as popup notifications
+
+### Using MCP Config Generators
+
+#### Generate FyUI MCP Config
+
+1. Click **Generate FyUI MCP Config** in the MCP section
+2. Enter the absolute path to your `fy_ui` repository (e.g., `/Users/yourname/projects/fy_ui`)
+3. The configuration is:
+   - ✅ Generated with proper path normalization
+   - ✅ Automatically copied to clipboard
+   - ✅ Displayed in output panel
+   - ✅ Adapts to FVM or system Dart based on your settings
+4. Paste the config into your MCP settings file
+
+#### Generate Fyers Launch Config
+
+1. Click **Generate Fyers Launch Config** in the MCP section
+2. Enter the absolute path to your `fyers_app` repository
+3. Two launch configurations are generated:
+   - **fyers_app** - Web debug on Chrome (port 5000, with CORS disabled)
+   - **fyers app mobile** - Mobile debug configuration
+4. The configuration is:
+   - ✅ Validated against lib/main.dart existence
+   - ✅ Automatically copied to clipboard
+   - ✅ Displayed in output panel
+5. Click **Open launch.json** to:
+   - Open existing launch.json, OR
+   - Create new launch.json with these configurations
 
 ### Build Process
 
@@ -223,6 +260,10 @@ This extension contributes the following commands:
 - `flutter-build-utils.cleanAndPubGet` - Clean & Pub Get with optional pubspec.lock deletion
 - `flutter-build-utils.podInstall` - Clean and reinstall iOS CocoaPods dependencies
 
+**MCP Commands:**
+- `flutter-build-utils.generateMcpConfig` - Generate FyUI MCP configuration
+- `flutter-build-utils.generateFyersLaunchConfig` - Generate Fyers App launch configurations
+
 **Other Commands:**
 - `flutter-build-utils.refreshView` - Refresh sidebar view
 - `flutter-build-utils.clearSessions` - Clear build history
@@ -298,7 +339,8 @@ Initial release with support for:
 - iOS IPA builds
 - Web builds with base-href
 - Utility commands (Version, Build Runner, Analyze, Format, Clean, Pub Get, Clean & Pub Get, Pod Install)
-- Sidebar UI with organized sections (Build/Utils)
+- MCP configuration generator for FyUI library
+- Sidebar UI with organized sections (Build/Utils/MCP)
 - Real-time command-by-command status tracking in sidebar
 - Build history (last 5 builds) with timing
 - Expandable error details in sidebar
@@ -309,7 +351,9 @@ Initial release with support for:
 - Smart build sequencing with multiple clean/pub get cycles
 - Code generation with build_runner
 - Code quality checks with analyze and format
-- iOS dependency management with Pod Install
+- iOS dependency management with Pod Install with UTF-8 encoding fix
+- Model Context Protocol integration support
+- Automatic clipboard copy for generated configs
 - Detailed output logging
 - Status bar progress indicators
 

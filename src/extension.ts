@@ -109,6 +109,17 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleUtilityCommand('flutterFormat')
     );
 
+    // MCP commands
+    const generateMcpConfigCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.generateMcpConfig',
+        () => handleGenerateMcpConfig()
+    );
+
+    const generateFyersLaunchConfigCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.generateFyersLaunchConfig',
+        () => handleGenerateFyersLaunchConfig()
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -124,6 +135,8 @@ export function activate(context: vscode.ExtensionContext) {
         pubGetCommand,
         cleanAndPubGetCommand,
         podInstallCommand,
+        generateMcpConfigCommand,
+        generateFyersLaunchConfigCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -380,6 +393,243 @@ async function handleUtilityCommand(utilType: 'flutterVersion' | 'buildRunner' |
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Utility command error: ${error.message}`);
+    }
+}
+
+/**
+ * Handle MCP config generation
+ */
+async function handleGenerateMcpConfig(): Promise<void> {
+    try {
+        // Prompt for FyUI library path
+        const fyUiPath = await vscode.window.showInputBox({
+            prompt: 'Enter the base path to your fy_ui library repository',
+            placeHolder: '/Users/yourname/projects/fy_ui',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Path cannot be empty';
+                }
+                // Check if path exists
+                if (!fs.existsSync(value.replace(/\/$/, ''))) {
+                    return 'Path does not exist. Please enter a valid path.';
+                }
+                return null;
+            }
+        });
+
+        if (!fyUiPath) {
+            return; // User cancelled
+        }
+
+        // Remove trailing slash if present
+        const normalizedPath = fyUiPath.replace(/\/$/, '');
+
+        // Get dart command to determine if using FVM
+        const dartCommand = getDartCommand();
+        const isUsingFvm = dartCommand.includes('fvm');
+
+        // Generate MCP config based on FVM usage
+        let mcpConfig: any;
+
+        if (isUsingFvm) {
+            // FVM configuration
+            mcpConfig = {
+                "fy_ui_mcp": {
+                    "displayName": "FyUI Components MCP",
+                    "type": "stdio",
+                    "command": "fvm",
+                    "args": [
+                        "dart",
+                        "run",
+                        `${normalizedPath}/mcp_server/bin/mcp_server.dart`
+                    ],
+                    "workingDirectory": `${normalizedPath}/mcp_server`
+                }
+            };
+        } else {
+            // System Dart configuration
+            mcpConfig = {
+                "fy_ui_mcp": {
+                    "displayName": "FyUI Components MCP",
+                    "type": "stdio",
+                    "command": "dart",
+                    "args": [
+                        "run",
+                        `${normalizedPath}/mcp_server/bin/mcp_server.dart`
+                    ],
+                    "workingDirectory": `${normalizedPath}/mcp_server`
+                }
+            };
+        }
+
+        const configJson = JSON.stringify(mcpConfig, null, 2);
+
+        // Show in output channel
+        const outputChannel = vscode.window.createOutputChannel('Flutter Build Utils');
+        outputChannel.clear();
+        outputChannel.show(true);
+
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('FyUI MCP Configuration Generated');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.appendLine(`FyUI Path: ${normalizedPath}`);
+        outputChannel.appendLine(`Using: ${isUsingFvm ? 'FVM (fvm dart)' : 'System Dart (dart)'}\n`);
+        outputChannel.appendLine('Add this to your MCP settings file:\n');
+        outputChannel.appendLine(configJson);
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Configuration copied to clipboard!');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+
+        // Copy to clipboard
+        await vscode.env.clipboard.writeText(configJson);
+
+        // Show success message with actions
+        const choice = await vscode.window.showInformationMessage(
+            'FyUI MCP config generated and copied to clipboard!',
+            'Generate Another',
+            'Close'
+        );
+
+        if (choice === 'Generate Another') {
+            // Regenerate
+            await handleGenerateMcpConfig();
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`MCP config generation error: ${error.message}`);
+    }
+}
+
+/**
+ * Handle Fyers App launch config generation
+ */
+async function handleGenerateFyersLaunchConfig(): Promise<void> {
+    try {
+        // Prompt for Fyers App path
+        const fyersAppPath = await vscode.window.showInputBox({
+            prompt: 'Enter the base path to your fyers_app repository',
+            placeHolder: '/Users/yourname/projects/fyers_app',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Path cannot be empty';
+                }
+                const normalizedValue = value.replace(/\/$/, '');
+                // Check if path exists
+                if (!fs.existsSync(normalizedValue)) {
+                    return 'Path does not exist. Please enter a valid path.';
+                }
+                // Check if it has lib/main.dart
+                const mainDartPath = path.join(normalizedValue, 'lib', 'main.dart');
+                if (!fs.existsSync(mainDartPath)) {
+                    return 'lib/main.dart not found. Please ensure this is a valid Flutter project.';
+                }
+                return null;
+            }
+        });
+
+        if (!fyersAppPath) {
+            return; // User cancelled
+        }
+
+        // Remove trailing slash if present
+        const normalizedPath = fyersAppPath.replace(/\/$/, '');
+
+        // Generate launch configurations
+        const launchConfigs = [
+            {
+                "name": "fyers_app (web - chrome)",
+                "cwd": normalizedPath,
+                "request": "launch",
+                "type": "dart",
+                "flutterMode": "debug",
+                "deviceId": "chrome",
+                "program": "lib/main.dart",
+                "args": [
+                    "--web-port=5000",
+                    "--web-enable-expression-evaluation",
+                    "--web-browser-flag",
+                    "--disable-web-security"
+                ]
+            },
+            {
+                "name": "fyers_app (any device)",
+                "cwd": normalizedPath,
+                "request": "launch",
+                "type": "dart",
+                "flutterMode": "debug",
+                "program": "lib/main.dart"
+            }
+        ];
+
+        const configJson = JSON.stringify(launchConfigs, null, 4);
+
+        // Show in output channel
+        const outputChannel = vscode.window.createOutputChannel('Flutter Build Utils');
+        outputChannel.clear();
+        outputChannel.show(true);
+
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Fyers App Launch Configurations Generated');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.appendLine(`Fyers App Path: ${normalizedPath}\n`);
+        outputChannel.appendLine('Add these to your launch.json configurations array:\n');
+        outputChannel.appendLine(configJson);
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Configurations copied to clipboard!');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+
+        // Copy to clipboard
+        await vscode.env.clipboard.writeText(configJson);
+
+        // Show success message with actions
+        const choice = await vscode.window.showInformationMessage(
+            'Fyers App launch configurations generated and copied to clipboard!',
+            'Open launch.json',
+            'Generate Another',
+            'Close'
+        );
+
+        if (choice === 'Open launch.json') {
+            // Try to open launch.json if it exists
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders && workspaceFolders.length > 0) {
+                const launchJsonPath = path.join(workspaceFolders[0].uri.fsPath, '.vscode', 'launch.json');
+
+                if (fs.existsSync(launchJsonPath)) {
+                    const doc = await vscode.workspace.openTextDocument(launchJsonPath);
+                    await vscode.window.showTextDocument(doc);
+                } else {
+                    // Create .vscode folder if it doesn't exist
+                    const vscodeFolder = path.join(workspaceFolders[0].uri.fsPath, '.vscode');
+                    if (!fs.existsSync(vscodeFolder)) {
+                        fs.mkdirSync(vscodeFolder, { recursive: true });
+                    }
+
+                    // Create basic launch.json
+                    const launchTemplate = {
+                        "version": "0.2.0",
+                        "configurations": launchConfigs
+                    };
+
+                    fs.writeFileSync(launchJsonPath, JSON.stringify(launchTemplate, null, 4));
+
+                    const doc = await vscode.workspace.openTextDocument(launchJsonPath);
+                    await vscode.window.showTextDocument(doc);
+
+                    vscode.window.showInformationMessage('Created launch.json with Fyers App configurations!');
+                }
+            } else {
+                vscode.window.showWarningMessage('No workspace folder found. Please paste the config manually.');
+            }
+        } else if (choice === 'Generate Another') {
+            // Regenerate
+            await handleGenerateFyersLaunchConfig();
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Launch config generation error: ${error.message}`);
     }
 }
 

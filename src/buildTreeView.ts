@@ -262,6 +262,44 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             )
         );
 
+        // MCP section header
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
+                'Environment setups',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('server-environment')
+            )
+        );
+
+        // MCP action buttons
+        items.push(
+            new BuildTreeItem(
+                '  Generate FYERS UI MCP Config',
+                'Generate MCP configuration for fy_ui library',
+                vscode.TreeItemCollapsibleState.None,
+                'mcpAction',
+                new vscode.ThemeIcon('json', new vscode.ThemeColor('charts.purple')),
+                'flutter-build-utils.generateMcpConfig'
+            ),
+            new BuildTreeItem(
+                '  Generate Fyers Launch Config',
+                'Generate launch.json for Fyers App',
+                vscode.TreeItemCollapsibleState.None,
+                'mcpAction',
+                new vscode.ThemeIcon('debug-alt', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.generateFyersLaunchConfig'
+            )
+        );
+
         // Add separator if there are active or recent sessions
         if (this.activeSessions.size > 0 || this.recentSessions.length > 0) {
             items.push(

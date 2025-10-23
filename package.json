@@ -104,6 +104,16 @@
         "command": "flutter-build-utils.flutterFormat",
         "title": "Flutter: Format",
         "icon": "$(symbol-color)"
+      },
+      {
+        "command": "flutter-build-utils.generateMcpConfig",
+        "title": "Flutter: Generate FyUI MCP Config",
+        "icon": "$(json)"
+      },
+      {
+        "command": "flutter-build-utils.generateFyersLaunchConfig",
+        "title": "Flutter: Generate Fyers Launch Config",
+        "icon": "$(debug-alt)"
       }
     ],
     "menus": {
