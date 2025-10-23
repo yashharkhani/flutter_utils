@@ -120,6 +120,42 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleGenerateFyersLaunchConfig()
     );
 
+    // Git action commands
+    const openRepositoryCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.openRepository',
+        () => handleGitAction('openRepo')
+    );
+
+    const createPRCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.createPR',
+        () => handleGitAction('createPR')
+    );
+
+    const viewPRCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.viewPR',
+        () => handleGitAction('viewPR')
+    );
+
+    const openActionsCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.openActions',
+        () => handleGitAction('openActions')
+    );
+
+    const openCurrentFileCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.openCurrentFile',
+        () => handleGitAction('openCurrentFile')
+    );
+
+    const viewCurrentCommitCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.viewCurrentCommit',
+        () => handleGitAction('viewCurrentCommit')
+    );
+
+    const copyCommitHashCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.copyCommitHash',
+        () => handleGitAction('copyCommitHash')
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -137,6 +173,13 @@ export function activate(context: vscode.ExtensionContext) {
         podInstallCommand,
         generateMcpConfigCommand,
         generateFyersLaunchConfigCommand,
+        openRepositoryCommand,
+        openCurrentFileCommand,
+        viewCurrentCommitCommand,
+        copyCommitHashCommand,
+        createPRCommand,
+        viewPRCommand,
+        openActionsCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -649,6 +692,238 @@ async function handleGenerateFyersLaunchConfig(): Promise<void> {
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Launch config generation error: ${error.message}`);
+    }
+}
+
+/**
+ * Get git repository URL
+ */
+async function getGitRepoUrl(workspaceFolder: string): Promise<string | null> {
+    try {
+        const exec = require('child_process').exec;
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        const { stdout } = await execAsync('git remote get-url origin', { cwd: workspaceFolder });
+        const remote = stdout.trim();
+
+        // Convert git@github.com:user/repo.git to https://github.com/user/repo
+        if (remote.startsWith('git@github.com:')) {
+            return remote
+                .replace('git@github.com:', 'https://github.com/')
+                .replace('.git', '');
+        }
+
+        // Handle https://github.com/user/repo.git format
+        if (remote.startsWith('https://')) {
+            return remote.replace('.git', '');
+        }
+
+        return remote;
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Get current git branch
+ */
+async function getCurrentBranch(workspaceFolder: string): Promise<string | null> {
+    try {
+        const exec = require('child_process').exec;
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: workspaceFolder });
+        return stdout.trim();
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Get current commit hash
+ */
+async function getCurrentCommitHash(workspaceFolder: string): Promise<string | null> {
+    try {
+        const exec = require('child_process').exec;
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        const { stdout } = await execAsync('git rev-parse HEAD', { cwd: workspaceFolder });
+        return stdout.trim();
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Get relative path of file within git repository
+ */
+async function getGitRelativePath(workspaceFolder: string, filePath: string): Promise<string | null> {
+    try {
+        const exec = require('child_process').exec;
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        // Get the git root directory
+        const { stdout: gitRoot } = await execAsync('git rev-parse --show-toplevel', { cwd: workspaceFolder });
+        const rootPath = gitRoot.trim();
+
+        // Calculate relative path from git root
+        const relativePath = path.relative(rootPath, filePath);
+        return relativePath;
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Open URL in default browser
+ */
+function openUrl(url: string): void {
+    const platform = process.platform;
+    let command: string;
+
+    if (platform === 'darwin') {
+        // macOS
+        command = `open "${url}"`;
+    } else if (platform === 'win32') {
+        // Windows
+        command = `start "${url}"`;
+    } else {
+        // Linux
+        command = `xdg-open "${url}"`;
+    }
+
+    const exec = require('child_process').exec;
+    exec(command, (error: any) => {
+        if (error) {
+            vscode.window.showErrorMessage(`Failed to open URL: ${error.message}`);
+        }
+    });
+}
+
+/**
+ * Handle git actions
+ */
+async function handleGitAction(actionType: 'openRepo' | 'openCurrentFile' | 'viewCurrentCommit' | 'copyCommitHash' | 'createPR' | 'viewPR' | 'openActions'): Promise<void> {
+    try {
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found.');
+            return;
+        }
+
+        // Get repo URL
+        const repoUrl = await getGitRepoUrl(workspaceFolder);
+        if (!repoUrl) {
+            vscode.window.showErrorMessage('Could not get git remote URL. Is this a git repository?');
+            return;
+        }
+
+        // Get current branch (not needed for all actions)
+        const currentBranch = await getCurrentBranch(workspaceFolder);
+
+        // Handle different actions
+        switch (actionType) {
+            case 'openRepo':
+                // Open repository with current branch
+                const repoWithBranch = currentBranch && currentBranch !== 'main' && currentBranch !== 'master'
+                    ? `${repoUrl}/tree/${currentBranch}`
+                    : repoUrl;
+                openUrl(repoWithBranch);
+                vscode.window.showInformationMessage(`Opening repository${currentBranch ? ` (${currentBranch})` : ''}...`);
+                break;
+
+            case 'openCurrentFile':
+                // Open current file on GitHub
+                const activeEditor = vscode.window.activeTextEditor;
+                if (!activeEditor) {
+                    vscode.window.showWarningMessage('No file is currently open.');
+                    return;
+                }
+
+                const currentFilePath = activeEditor.document.uri.fsPath;
+                const relativePath = await getGitRelativePath(workspaceFolder, currentFilePath);
+
+                if (!relativePath) {
+                    vscode.window.showErrorMessage('Could not determine file path in repository.');
+                    return;
+                }
+
+                const fileBranch = await getCurrentBranch(workspaceFolder);
+                if (!fileBranch) {
+                    vscode.window.showErrorMessage('Could not get current branch.');
+                    return;
+                }
+
+                // Get current selection/line
+                const selection = activeEditor.selection;
+                const lineNumber = selection.active.line + 1; // Lines are 0-based, GitHub is 1-based
+
+                const fileUrl = `${repoUrl}/blob/${fileBranch}/${relativePath}#L${lineNumber}`;
+                openUrl(fileUrl);
+                vscode.window.showInformationMessage(`Opening ${path.basename(currentFilePath)} on GitHub (${fileBranch}, line ${lineNumber})...`);
+                break;
+
+            case 'viewCurrentCommit':
+                // View current commit on GitHub
+                const commitHashForView = await getCurrentCommitHash(workspaceFolder);
+                if (!commitHashForView) {
+                    vscode.window.showErrorMessage('Could not get current commit hash.');
+                    return;
+                }
+
+                const commitUrl = `${repoUrl}/commit/${commitHashForView}`;
+                openUrl(commitUrl);
+                vscode.window.showInformationMessage(`Opening commit ${commitHashForView.substring(0, 7)}...`);
+                break;
+
+            case 'copyCommitHash':
+                // Copy commit hash to clipboard
+                const commitHashToCopy = await getCurrentCommitHash(workspaceFolder);
+                if (!commitHashToCopy) {
+                    vscode.window.showErrorMessage('Could not get current commit hash.');
+                    return;
+                }
+
+                await vscode.env.clipboard.writeText(commitHashToCopy);
+                vscode.window.showInformationMessage(`Copied commit hash: ${commitHashToCopy.substring(0, 7)}...`);
+                break;
+
+            case 'createPR':
+                if (!currentBranch) {
+                    vscode.window.showErrorMessage('Could not get current branch.');
+                    return;
+                }
+                // Create PR from current branch to master
+                const createPrUrl = `${repoUrl}/compare/master...${currentBranch}`;
+                openUrl(createPrUrl);
+                vscode.window.showInformationMessage(`Creating PR: ${currentBranch} → master...`);
+                break;
+
+            case 'viewPR':
+                if (!currentBranch) {
+                    vscode.window.showErrorMessage('Could not get current branch.');
+                    return;
+                }
+                // View PR for current branch
+                const viewPrUrl = `${repoUrl}/pulls?q=is%3Apr+head%3A${currentBranch}`;
+                openUrl(viewPrUrl);
+                vscode.window.showInformationMessage(`Opening PRs for branch: ${currentBranch}...`);
+                break;
+
+            case 'openActions':
+                // Open GitHub Actions
+                const actionsUrl = `${repoUrl}/actions`;
+                openUrl(actionsUrl);
+                vscode.window.showInformationMessage('Opening GitHub Actions...');
+                break;
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Git action error: ${error.message}`);
     }
 }
 

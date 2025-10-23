@@ -21,10 +21,20 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Clean & Pub Get** - Combined clean and pub get with optional pubspec.lock deletion
 - **Pod Install** - Clean and reinstall iOS CocoaPods dependencies
 
-### 🔌 MCP Commands
+### 🔌 Environment Setups
 
 - **Generate FyUI MCP Config** - Generate Model Context Protocol configuration for FyUI library
 - **Generate Fyers Launch Config** - Generate VS Code launch.json configurations for Fyers App (web + mobile)
+
+### 🔀 Git Actions
+
+- **Open Repository** - Open GitHub repository in browser (with current branch if not main/master)
+- **Open Current File** - Open currently active file on GitHub (jumps to current line)
+- **View Current Commit** - View current HEAD commit on GitHub
+- **Copy Commit Hash** - Copy current commit SHA to clipboard
+- **Create PR** - Open GitHub PR creation page (current branch → master)
+- **View PR** - View existing pull requests for current branch
+- **Open Actions** - Open GitHub Actions CI/CD page
 
 ### ✨ Key Capabilities
 
@@ -42,6 +52,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Detailed Output Logging** - View complete build logs in dedicated output channel
 - **Command Palette Integration** - Access builds via Command Palette or sidebar
 - **Cross-Platform** - Works on macOS, Windows, and Linux
+- **Git Integration** - Quick access to GitHub repository, PRs, and Actions
 
 ## Usage
 
@@ -68,9 +79,18 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
    - 🔄 **Clean & Pub Get** - Combined clean and pub get
    - 📦 **Pod Install** - Clean and reinstall iOS pods
 
-**MCP Section:**
+**Environment Setups Section:**
    - 📝 **Generate FyUI MCP Config** - Create MCP configuration for FyUI library
    - 🐛 **Generate Fyers Launch Config** - Create launch.json for Fyers App debugging
+
+**Git Actions Section:**
+   - 📂 **Open Repository** - Open GitHub repo in browser
+   - 📄 **Open Current File** - Open active file on GitHub
+   - 👁️ **View Current Commit** - View HEAD commit on GitHub
+   - 📋 **Copy Commit Hash** - Copy commit SHA
+   - ➕ **Create PR** - Create pull request to master
+   - 👁️ **View PR** - View PRs for current branch
+   - ⚡ **Open Actions** - Open GitHub Actions
 
 4. Follow the prompts:
    - Choose whether to delete `pubspec.lock`
@@ -142,6 +162,47 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 5. Click **Open launch.json** to:
    - Open existing launch.json, OR
    - Create new launch.json with these configurations
+
+#### Git Actions
+
+All git actions work with your current workspace git repository:
+
+1. **Open Repository**
+   - Opens GitHub repository in your default browser
+   - If on a feature branch, opens that branch view
+   - If on main/master, opens repository homepage
+
+2. **Open Current File**
+   - Opens the currently active file on GitHub
+   - Automatically jumps to your current cursor line
+   - Uses current branch (not commit) for live file view
+   - Perfect for sharing specific code with teammates
+   - Example: `https://github.com/user/repo/blob/feature-branch/lib/main.dart#L45`
+
+3. **View Current Commit**
+   - Opens the current HEAD commit on GitHub
+   - See commit message, changed files, and diff
+   - Shows short hash (first 7 chars) in notification
+
+4. **Copy Commit Hash**
+   - Copies the full commit SHA to clipboard
+   - Shows short hash in confirmation message
+   - Useful for referencing commits in PRs/issues
+
+5. **Create PR**
+   - Opens GitHub PR creation page
+   - Pre-configured to create PR: `current branch` → `master`
+   - Works with any branch except main/master
+
+6. **View PR**
+   - Opens GitHub PRs filtered by current branch
+   - See all PRs for your current branch
+   - Quick way to check PR status
+
+7. **Open Actions**
+   - Opens GitHub Actions page
+   - View CI/CD workflow runs
+   - Check build status
 
 ### Build Process
 
@@ -263,9 +324,18 @@ This extension contributes the following commands:
 - `flutter-build-utils.cleanAndPubGet` - Clean & Pub Get with optional pubspec.lock deletion
 - `flutter-build-utils.podInstall` - Clean and reinstall iOS CocoaPods dependencies
 
-**MCP Commands:**
+**Environment Setup Commands:**
 - `flutter-build-utils.generateMcpConfig` - Generate FyUI MCP configuration
 - `flutter-build-utils.generateFyersLaunchConfig` - Generate Fyers App launch configurations
+
+**Git Action Commands:**
+- `flutter-build-utils.openRepository` - Open GitHub repository in browser
+- `flutter-build-utils.openCurrentFile` - Open current file on GitHub with line number
+- `flutter-build-utils.viewCurrentCommit` - View current commit on GitHub
+- `flutter-build-utils.copyCommitHash` - Copy commit hash to clipboard
+- `flutter-build-utils.createPR` - Create pull request
+- `flutter-build-utils.viewPR` - View pull requests for current branch
+- `flutter-build-utils.openActions` - Open GitHub Actions
 
 **Other Commands:**
 - `flutter-build-utils.refreshView` - Refresh sidebar view
@@ -359,8 +429,9 @@ Initial release with support for:
 - iOS IPA builds
 - Web builds with base-href and optional WebAssembly (WASM)
 - Utility commands (Version, Build Runner, Analyze, Format, Clean, Pub Get, Clean & Pub Get, Pod Install)
-- MCP configuration generators (FyUI MCP, Fyers App Launch Config)
-- Sidebar UI with organized sections (Build/Utils/Environment setups)
+- Environment setup generators (FyUI MCP, Fyers App Launch Config)
+- Git Actions (Open Repo, Open Current File, View Commit, Copy Hash, Create PR, View PR, Open Actions)
+- Sidebar UI with organized sections (Build/Utils/Environment setups/Git Actions)
 - Real-time command-by-command status tracking in sidebar
 - Build history (last 5 builds) with timing
 - Expandable error details in sidebar
@@ -375,6 +446,9 @@ Initial release with support for:
 - WebAssembly compilation option for web builds
 - Model Context Protocol integration support
 - VS Code launch.json generator for Fyers App
+- Git integration for GitHub workflows (repo, PRs, actions)
+- Automatic URL opening in default browser
+- Cross-platform browser support (macOS/Windows/Linux)
 - Automatic clipboard copy for generated configs
 - Detailed output logging
 - Status bar progress indicators

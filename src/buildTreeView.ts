@@ -300,6 +300,84 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             )
         );
 
+        // Git Actions section header
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
+                'Git Actions',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('github')
+            )
+        );
+
+        // Git action buttons
+        items.push(
+            new BuildTreeItem(
+                '  Open Repository',
+                'Open GitHub repository in browser',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('repo', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.openRepository'
+            ),
+            new BuildTreeItem(
+                '  Open Current File',
+                'Open current file on GitHub',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('file-code', new vscode.ThemeColor('charts.cyan')),
+                'flutter-build-utils.openCurrentFile'
+            ),
+            new BuildTreeItem(
+                '  View Current Commit',
+                'View current commit on GitHub',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('git-commit', new vscode.ThemeColor('charts.yellow')),
+                'flutter-build-utils.viewCurrentCommit'
+            ),
+            new BuildTreeItem(
+                '  Copy Commit Hash',
+                'Copy current commit SHA to clipboard',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('clippy', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.copyCommitHash'
+            ),
+            new BuildTreeItem(
+                '  Create PR',
+                'Create pull request to master',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('git-pull-request-create', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.createPR'
+            ),
+            new BuildTreeItem(
+                '  View PR',
+                'View pull request for current branch',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('git-pull-request', new vscode.ThemeColor('charts.purple')),
+                'flutter-build-utils.viewPR'
+            ),
+            new BuildTreeItem(
+                '  Open Actions',
+                'Open GitHub Actions',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('pulse', new vscode.ThemeColor('charts.orange')),
+                'flutter-build-utils.openActions'
+            )
+        );
+
         // Add separator if there are active or recent sessions
         if (this.activeSessions.size > 0 || this.recentSessions.length > 0) {
             items.push(

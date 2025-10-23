@@ -114,6 +114,41 @@
         "command": "flutter-build-utils.generateFyersLaunchConfig",
         "title": "Flutter: Generate Fyers Launch Config",
         "icon": "$(debug-alt)"
+      },
+      {
+        "command": "flutter-build-utils.openRepository",
+        "title": "Git: Open Repository",
+        "icon": "$(repo)"
+      },
+      {
+        "command": "flutter-build-utils.createPR",
+        "title": "Git: Create Pull Request",
+        "icon": "$(git-pull-request-create)"
+      },
+      {
+        "command": "flutter-build-utils.viewPR",
+        "title": "Git: View Pull Request",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "flutter-build-utils.openActions",
+        "title": "Git: Open GitHub Actions",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "flutter-build-utils.openCurrentFile",
+        "title": "Git: Open Current File on GitHub",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "flutter-build-utils.viewCurrentCommit",
+        "title": "Git: View Current Commit",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "flutter-build-utils.copyCommitHash",
+        "title": "Git: Copy Commit Hash",
+        "icon": "$(clippy)"
       }
     ],
     "menus": {
