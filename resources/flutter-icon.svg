@@ -1,7 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <path d="M14.314 3.5L7.5 10.314l2.828 2.828L17.142 6.33 14.314 3.5z" fill="#54C5F8"/>
-  <path d="M17.142 6.33l-6.814 6.813 2.829 2.828 6.813-6.814-2.828-2.828z" fill="#01579B"/>
-  <path d="M13.157 15.97l-2.829-2.827-2.828 2.828 2.828 2.829 2.829-2.829z" fill="#29B6F6"/>
-  <path d="M10.328 18.8l2.829-2.829-2.829-2.829-2.828 2.829 2.828 2.829z" fill="#0277BD"/>
-  <path d="M7.5 21.628l2.828-2.828-2.828-2.829L4.67 18.8l2.829 2.828z" fill="#01579B" opacity="0.8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Hammer Icon (centered, larger, no background) -->
+  <g transform="translate(100, 100) rotate(-45) scale(1.5)">
+    <!-- Hammer head -->
+    <rect x="-45" y="-18" width="55" height="36" fill="#E0E0E0" rx="4"/>
+    <!-- Highlight on hammer head -->
+    <rect x="-45" y="-18" width="55" height="12" fill="#F5F5F5" rx="4" opacity="0.5"/>
+
+    <!-- Claw part -->
+    <path d="M 10,-18 L 25,-18 L 25,-8 L 32,0 L 25,8 L 25,18 L 10,18 Z" fill="#BDBDBD"/>
+    <!-- Claw highlight -->
+    <path d="M 10,-18 L 20,-18 L 20,-8 L 25,0 L 20,8 L 20,18 L 10,18 Z" fill="#D0D0D0"/>
+
+    <!-- Metal connection band -->
+    <ellipse cx="0" cy="0" rx="10" ry="10" fill="#9E9E9E"/>
+
+    <!-- Handle (wooden) -->
+    <rect x="-8" y="-6" width="16" height="70" fill="#8D6E63" rx="3"/>
+    <!-- Handle highlight -->
+    <rect x="-8" y="-6" width="6" height="70" fill="#A1887F" rx="3" opacity="0.6"/>
+
+    <!-- Handle grip lines -->
+    <line x1="-8" y1="15" x2="8" y2="15" stroke="#6D4C41" stroke-width="2"/>
+    <line x1="-8" y1="30" x2="8" y2="30" stroke="#6D4C41" stroke-width="2"/>
+    <line x1="-8" y1="45" x2="8" y2="45" stroke="#6D4C41" stroke-width="2"/>
+  </g>
 </svg>
