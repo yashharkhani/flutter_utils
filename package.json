@@ -20,7 +20,7 @@
         {
           "id": "flutter-build-utils",
           "title": "flutter-toolbox",
-          "icon": "resources/flutter-icon.svg"
+          "icon": "resources/icon.svg"
         }
       ]
     },
@@ -29,7 +29,7 @@
         {
           "id": "flutterBuildUtilsView",
           "name": "Flutter Utils",
-          "icon": "resources/flutter-icon.svg",
+          "icon": "resources/icon.svg",
           "contextualTitle": "Flutter Utils"
         }
       ]
