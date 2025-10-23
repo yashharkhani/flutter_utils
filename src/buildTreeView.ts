@@ -103,14 +103,21 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             const sessionSteps = this.getSessionSteps(element.sessionId!);
             children.push(...sessionSteps);
 
-            // Add "Open in Finder" button for completed successful builds
+            // Add "Open in Finder" button for completed successful builds (not utilities)
             const session = this.activeSessions.get(element.sessionId!) ||
                            this.recentSessions.find(s => s.id === element.sessionId!);
 
             if (session && session.status === SessionStatus.Completed && session.workspaceFolder) {
-                const openFolderItem = this.createOpenFolderItem(session);
-                if (openFolderItem) {
-                    children.push(openFolderItem);
+                // Only show for actual builds (APK, IPA, Web), not utility commands
+                const isUtilityCommand = session.buildName === 'Clean' ||
+                                        session.buildName === 'Pub Get' ||
+                                        session.buildName === 'Clean & Pub Get';
+
+                if (!isUtilityCommand) {
+                    const openFolderItem = this.createOpenFolderItem(session);
+                    if (openFolderItem) {
+                        children.push(openFolderItem);
+                    }
                 }
             }
 
@@ -134,10 +141,21 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
     private getRootItems(): BuildTreeItem[] {
         const items: BuildTreeItem[] = [];
 
+        // Build section header
+        items.push(
+            new BuildTreeItem(
+                'BUILD',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('package')
+            )
+        );
+
         // Build action buttons
         items.push(
             new BuildTreeItem(
-                'Build APK',
+                '  Build APK',
                 'Build Android APK (Release)',
                 vscode.TreeItemCollapsibleState.None,
                 'buildAction',
@@ -145,7 +163,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'flutter-build-utils.buildApk'
             ),
             new BuildTreeItem(
-                'Build IPA',
+                '  Build IPA',
                 'Build iOS IPA (Release)',
                 vscode.TreeItemCollapsibleState.None,
                 'buildAction',
@@ -153,12 +171,74 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'flutter-build-utils.buildIpa'
             ),
             new BuildTreeItem(
-                'Build Web',
+                '  Build Web',
                 'Build Web with base-href',
                 vscode.TreeItemCollapsibleState.None,
                 'buildAction',
                 new vscode.ThemeIcon('globe', new vscode.ThemeColor('charts.purple')),
                 'flutter-build-utils.buildWeb'
+            )
+        );
+
+        // Utils section header
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
+                'UTILS',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('tools')
+            )
+        );
+
+        // Utility action buttons
+        items.push(
+            new BuildTreeItem(
+                '  Flutter Version',
+                'Check Flutter version',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('info', new vscode.ThemeColor('charts.purple')),
+                'flutter-build-utils.flutterVersion'
+            ),
+            new BuildTreeItem(
+                '  Clean',
+                'Run flutter clean',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('trash', new vscode.ThemeColor('charts.orange')),
+                'flutter-build-utils.clean'
+            ),
+            new BuildTreeItem(
+                '  Pub Get',
+                'Run flutter pub get',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('cloud-download', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.pubGet'
+            ),
+            new BuildTreeItem(
+                '  Clean & Pub Get',
+                'Run flutter clean and flutter pub get',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('sync', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.cleanAndPubGet'
+            ),
+            new BuildTreeItem(
+                '  Pod Install',
+                'Clean and reinstall iOS pods',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('package', new vscode.ThemeColor('charts.red')),
+                'flutter-build-utils.podInstall'
             )
         );
 

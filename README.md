@@ -10,6 +10,14 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Build IPA** - Generate iOS IPA with optimized build sequence
 - **Build Web** - Generate web build with customizable base-href
 
+### 🛠️ Utility Commands
+
+- **Flutter Version** - Check installed Flutter version (works with FVM or system Flutter)
+- **Clean** - Run `flutter clean` to remove build artifacts
+- **Pub Get** - Run `flutter pub get` to fetch dependencies
+- **Clean & Pub Get** - Combined clean and pub get with optional pubspec.lock deletion
+- **Pod Install** - Clean and reinstall iOS CocoaPods dependencies
+
 ### ✨ Key Capabilities
 
 - **Sidebar UI** - Beautiful sidebar panel with clickable build commands
@@ -34,10 +42,19 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 
 1. Open a Flutter project in VS Code
 2. Click the **Flutter Build Utils** icon in the Activity Bar (left sidebar)
-3. Click on any build option:
+3. Choose from the available options:
+
+**BUILD Section:**
    - 📱 **Build APK** - Android release build
    - 📱 **Build IPA** - iOS release build
    - 🌐 **Build Web** - Web release build
+
+**UTILS Section:**
+   - ℹ️ **Flutter Version** - Check Flutter version
+   - 🗑️ **Clean** - Clean build artifacts
+   - 📥 **Pub Get** - Fetch dependencies
+   - 🔄 **Clean & Pub Get** - Combined clean and pub get
+   - 📦 **Pod Install** - Clean and reinstall iOS pods
 
 4. Follow the prompts:
    - Choose whether to delete `pubspec.lock`
@@ -185,9 +202,19 @@ If a step fails:
 
 This extension contributes the following commands:
 
+**Build Commands:**
 - `flutter-build-utils.buildApk` - Build Android APK
 - `flutter-build-utils.buildIpa` - Build iOS IPA
 - `flutter-build-utils.buildWeb` - Build Web with base-href
+
+**Utility Commands:**
+- `flutter-build-utils.flutterVersion` - Check Flutter version
+- `flutter-build-utils.clean` - Run flutter clean
+- `flutter-build-utils.pubGet` - Run flutter pub get
+- `flutter-build-utils.cleanAndPubGet` - Clean & Pub Get with optional pubspec.lock deletion
+- `flutter-build-utils.podInstall` - Clean and reinstall iOS CocoaPods dependencies
+
+**Other Commands:**
 - `flutter-build-utils.refreshView` - Refresh sidebar view
 - `flutter-build-utils.clearSessions` - Clear build history
 - `flutter-build-utils.openOutputFolder` - Open build output folder in Finder/Explorer
@@ -261,7 +288,8 @@ Initial release with support for:
 - Android APK builds
 - iOS IPA builds
 - Web builds with base-href
-- Sidebar UI with build action buttons
+- Utility commands (Clean, Pub Get, Clean & Pub Get)
+- Sidebar UI with organized sections (Build/Utils)
 - Real-time command-by-command status tracking in sidebar
 - Build history (last 5 builds) with timing
 - Expandable error details in sidebar
@@ -269,6 +297,7 @@ Initial release with support for:
 - Cross-platform folder opening (macOS/Windows/Linux)
 - Configurable Flutter command prefix
 - Smart build sequencing with multiple clean/pub get cycles
+- Quick utilities for common Flutter tasks
 - Detailed output logging
 - Status bar progress indicators
 

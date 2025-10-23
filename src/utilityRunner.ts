@@ -1,16 +1,16 @@
 /**
- * Build Runner - Executes build commands and manages their state
+ * Utility Runner - Executes utility commands and manages their state
  */
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { BuildTreeProvider } from './buildTreeView';
-import { BuildConfig, BuildSession, BuildStep, BuildType, CommandStatus, SessionStatus } from './types';
+import { BuildSession, BuildStep, BuildType, CommandStatus, SessionStatus } from './types';
 
 const execAsync = promisify(exec);
 
-export class BuildRunner {
+export class UtilityRunner {
     private outputChannel: vscode.OutputChannel;
     private statusBarItem: vscode.StatusBarItem;
     private treeProvider?: BuildTreeProvider;
@@ -21,27 +21,205 @@ export class BuildRunner {
         this.treeProvider = treeProvider;
     }
 
-    /**
-     * Set tree provider (if not provided in constructor)
-     */
     setTreeProvider(treeProvider: BuildTreeProvider): void {
         this.treeProvider = treeProvider;
     }
 
     /**
-     * Execute a build configuration
+     * Execute Flutter version check
      */
-    async executeBuild(
-        config: BuildConfig,
+    async executeFlutterVersion(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
+        this.outputChannel.clear();
+        this.outputChannel.show(true);
+
+        this.log(`\n${'='.repeat(60)}`);
+        this.log(`Flutter Version Information`);
+        this.log(`${'='.repeat(60)}\n`);
+        this.log(`Workspace: ${workspaceFolder}`);
+        this.log(`Flutter Command: ${flutterCommand}\n`);
+
+        this.statusBarItem.text = '$(sync~spin) Checking Flutter version...';
+        this.statusBarItem.show();
+
+        try {
+            const versionCommand = `${flutterCommand} --version`;
+            this.log(`${'─'.repeat(60)}`);
+            this.log(`Command: ${versionCommand}`);
+            this.log(`${'─'.repeat(60)}\n`);
+
+            const { stdout, stderr } = await execAsync(versionCommand, {
+                cwd: workspaceFolder,
+                maxBuffer: 10 * 1024 * 1024
+            });
+
+            if (stdout) {
+                this.log(stdout.trim());
+            }
+
+            if (stderr && stderr.trim()) {
+                this.log('\nAdditional Info:');
+                this.log(stderr.trim());
+            }
+
+            this.log(`\n${'='.repeat(60)}`);
+            this.log(`✅ Flutter version retrieved successfully`);
+            this.log(`${'='.repeat(60)}\n`);
+
+            this.statusBarItem.text = '$(check) Flutter Version Retrieved';
+            this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+
+            vscode.window.showInformationMessage('Flutter version retrieved successfully!');
+
+            setTimeout(() => {
+                this.statusBarItem.hide();
+            }, 3000);
+
+            return true;
+
+        } catch (error: any) {
+            this.log(`\n❌ Error getting Flutter version`);
+            if (error.message) {
+                this.log(`Error: ${error.message}`);
+            }
+            if (error.stderr) {
+                this.log(`Details: ${error.stderr}`);
+            }
+
+            this.statusBarItem.text = '$(error) Version Check Failed';
+            this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+
+            vscode.window.showErrorMessage('Failed to get Flutter version. Check output for details.');
+
+            setTimeout(() => {
+                this.statusBarItem.hide();
+            }, 5000);
+
+            return false;
+        }
+    }
+
+    /**
+     * Execute clean command
+     */
+    async executeClean(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            'Clean',
+            [{ id: 'clean', description: 'Clean project', command: '{FLUTTER_CMD} clean' }]
+        );
+    }
+
+    /**
+     * Execute pub get command
+     */
+    async executePubGet(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            'Pub Get',
+            [{ id: 'pub-get', description: 'Get dependencies', command: '{FLUTTER_CMD} pub get' }]
+        );
+    }
+
+    /**
+     * Execute clean and pub get
+     */
+    async executeCleanAndPubGet(
         workspaceFolder: string,
         flutterCommand: string,
-        skipPubspecLockDeletion: boolean = false
+        deletePubspecLock: boolean
+    ): Promise<boolean> {
+        const steps: BuildStep[] = [];
+
+        if (deletePubspecLock) {
+            steps.push({
+                id: 'delete-lock',
+                description: 'Delete pubspec.lock',
+                command: 'rm -f pubspec.lock'
+            });
+        }
+
+        steps.push(
+            {
+                id: 'clean',
+                description: 'Clean project',
+                command: '{FLUTTER_CMD} clean'
+            },
+            {
+                id: 'pub-get',
+                description: 'Get dependencies',
+                command: '{FLUTTER_CMD} pub get'
+            }
+        );
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            'Clean & Pub Get',
+            steps
+        );
+    }
+
+    /**
+     * Execute pod install
+     */
+    async executePodInstall(workspaceFolder: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'remove-pods',
+                description: 'Remove Pods folder',
+                command: 'cd ios && rm -rf Pods'
+            },
+            {
+                id: 'remove-symlinks',
+                description: 'Remove .symlinks',
+                command: 'cd ios && rm -rf .symlinks'
+            },
+            {
+                id: 'remove-podfile-lock',
+                description: 'Remove Podfile.lock',
+                command: 'cd ios && rm -rf Podfile.lock'
+            },
+            {
+                id: 'pod-deintegrate',
+                description: 'Pod deintegrate',
+                command: 'cd ios && pod deintegrate'
+            },
+            {
+                id: 'pod-setup',
+                description: 'Pod setup',
+                command: 'cd ios && pod setup'
+            },
+            {
+                id: 'pod-install',
+                description: 'Pod install',
+                command: 'cd ios && pod install'
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            '', // No flutter command needed for pod install
+            'Pod Install',
+            steps
+        );
+    }
+
+    /**
+     * Execute utility with session tracking
+     */
+    private async executeUtilityWithSession(
+        workspaceFolder: string,
+        flutterCommand: string,
+        utilityName: string,
+        steps: BuildStep[]
     ): Promise<boolean> {
         this.outputChannel.clear();
         this.outputChannel.show(true);
 
         this.log(`\n${'='.repeat(60)}`);
-        this.log(`Starting ${config.name} Build Process`);
+        this.log(`Starting: ${utilityName}`);
         this.log(`${'='.repeat(60)}\n`);
         this.log(`Workspace: ${workspaceFolder}`);
         this.log(`Flutter Command: ${flutterCommand}\n`);
@@ -49,16 +227,12 @@ export class BuildRunner {
         // Show Flutter version
         await this.showFlutterVersion(workspaceFolder, flutterCommand);
 
-        // Create build session
-        const sessionId = `build-${Date.now()}`;
-        const steps = config.steps.filter(step =>
-            !step.optional || (step.id === 'delete-pubspec-lock' && !skipPubspecLockDeletion)
-        );
-
+        // Create session
+        const sessionId = `util-${Date.now()}`;
         const session: BuildSession = {
             id: sessionId,
-            buildType: this.getBuildTypeFromName(config.name),
-            buildName: config.name,
+            buildType: BuildType.APK, // Use APK as placeholder for utils
+            buildName: utilityName,
             status: SessionStatus.Running,
             startTime: new Date(),
             workspaceFolder: workspaceFolder,
@@ -77,13 +251,6 @@ export class BuildRunner {
         const totalSteps = steps.length;
 
         for (const step of steps) {
-            // Skip optional steps if needed
-            if (step.optional && step.id === 'delete-pubspec-lock' && skipPubspecLockDeletion) {
-                this.log(`⏭️  Skipping: ${step.description}\n`);
-                continue;
-            }
-
-            // Prepare command
             const command = step.command.replace('{FLUTTER_CMD}', flutterCommand);
 
             this.log(`${'─'.repeat(60)}`);
@@ -104,17 +271,15 @@ export class BuildRunner {
             const success = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex);
 
             if (!success) {
-                // Update step to failed
+                // Update to failed
                 if (this.treeProvider) {
                     this.treeProvider.completeBuildSession(sessionId, SessionStatus.Failed);
                 }
 
-                this.statusBarItem.text = `$(error) Build Failed: ${step.description}`;
+                this.statusBarItem.text = `$(error) ${utilityName} Failed`;
                 this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
 
-                vscode.window.showErrorMessage(
-                    `Build failed at step: ${step.description}. Check output for details.`
-                );
+                vscode.window.showErrorMessage(`${utilityName} failed at step: ${step.description}. Check output for details.`);
 
                 setTimeout(() => {
                     this.statusBarItem.hide();
@@ -126,19 +291,19 @@ export class BuildRunner {
             stepIndex++;
         }
 
-        // Build completed successfully
+        // Completed successfully
         if (this.treeProvider) {
             this.treeProvider.completeBuildSession(sessionId, SessionStatus.Completed);
         }
 
         this.log(`\n${'='.repeat(60)}`);
-        this.log(`✅ ${config.name} Build Completed Successfully!`);
+        this.log(`✅ ${utilityName} Completed Successfully!`);
         this.log(`${'='.repeat(60)}\n`);
 
-        this.statusBarItem.text = `$(check) Build Complete`;
+        this.statusBarItem.text = `$(check) ${utilityName} Complete`;
         this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
 
-        vscode.window.showInformationMessage(`${config.name} build completed successfully!`);
+        vscode.window.showInformationMessage(`${utilityName} completed successfully!`);
 
         setTimeout(() => {
             this.statusBarItem.hide();
@@ -237,22 +402,6 @@ export class BuildRunner {
     }
 
     /**
-     * Get build type from build name
-     */
-    private getBuildTypeFromName(buildName: string): BuildType {
-        if (buildName.includes('APK')) {
-            return BuildType.APK;
-        }
-        if (buildName.includes('IPA')) {
-            return BuildType.IPA;
-        }
-        if (buildName.includes('Web')) {
-            return BuildType.Web;
-        }
-        return BuildType.APK; // Default
-    }
-
-    /**
      * Show Flutter version
      */
     private async showFlutterVersion(workspaceFolder: string, flutterCommand: string): Promise<void> {
@@ -295,9 +444,6 @@ export class BuildRunner {
         this.outputChannel.appendLine(message);
     }
 
-    /**
-     * Dispose resources
-     */
     dispose(): void {
         this.outputChannel.dispose();
         this.statusBarItem.dispose();

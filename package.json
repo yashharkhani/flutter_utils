@@ -64,6 +64,31 @@
         "command": "flutter-build-utils.openOutputFolder",
         "title": "Open Output Folder",
         "icon": "$(folder-opened)"
+      },
+      {
+        "command": "flutter-build-utils.flutterVersion",
+        "title": "Flutter: Check Version",
+        "icon": "$(info)"
+      },
+      {
+        "command": "flutter-build-utils.clean",
+        "title": "Flutter: Clean",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "flutter-build-utils.pubGet",
+        "title": "Flutter: Pub Get",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "flutter-build-utils.cleanAndPubGet",
+        "title": "Flutter: Clean & Pub Get",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "flutter-build-utils.podInstall",
+        "title": "Flutter: Pod Install",
+        "icon": "$(package)"
       }
     ],
     "menus": {

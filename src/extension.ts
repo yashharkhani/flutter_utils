@@ -10,8 +10,10 @@ import { getBuildConfig } from './buildCommands';
 import { BuildRunner } from './buildRunner';
 import { BuildTreeItem, BuildTreeProvider } from './buildTreeView';
 import { BuildType } from './types';
+import { UtilityRunner } from './utilityRunner';
 
 let buildRunner: BuildRunner;
+let utilityRunner: UtilityRunner;
 let treeDataProvider: BuildTreeProvider;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -24,8 +26,9 @@ export function activate(context: vscode.ExtensionContext) {
         treeDataProvider
     );
 
-    // Initialize build runner with tree provider
+    // Initialize build runner and utility runner with tree provider
     buildRunner = new BuildRunner(treeDataProvider);
+    utilityRunner = new UtilityRunner(treeDataProvider);
 
     // Register commands
     const buildApkCommand = vscode.commands.registerCommand(
@@ -65,6 +68,32 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // Utility commands
+    const flutterVersionCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.flutterVersion',
+        () => handleUtilityCommand('flutterVersion')
+    );
+
+    const cleanCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.clean',
+        () => handleUtilityCommand('clean')
+    );
+
+    const pubGetCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.pubGet',
+        () => handleUtilityCommand('pubGet')
+    );
+
+    const cleanAndPubGetCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.cleanAndPubGet',
+        () => handleUtilityCommand('cleanAndPubGet')
+    );
+
+    const podInstallCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.podInstall',
+        () => handleUtilityCommand('podInstall')
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -72,8 +101,14 @@ export function activate(context: vscode.ExtensionContext) {
         refreshViewCommand,
         clearSessionsCommand,
         openOutputFolderCommand,
+        flutterVersionCommand,
+        cleanCommand,
+        pubGetCommand,
+        cleanAndPubGetCommand,
+        podInstallCommand,
         treeView,
-        buildRunner
+        buildRunner,
+        utilityRunner
     );
 }
 
@@ -228,6 +263,85 @@ async function getBaseHref(): Promise<string | undefined> {
 }
 
 /**
+ * Handle utility command execution
+ */
+async function handleUtilityCommand(utilType: 'flutterVersion' | 'clean' | 'pubGet' | 'cleanAndPubGet' | 'podInstall'): Promise<void> {
+    try {
+        // Get workspace folder
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found. Please open a Flutter project.');
+            return;
+        }
+
+        // Verify it's a Flutter project (except for version check which can run anywhere)
+        if (utilType !== 'flutterVersion') {
+            const pubspecPath = path.join(workspaceFolder, 'pubspec.yaml');
+            if (!fs.existsSync(pubspecPath)) {
+                vscode.window.showErrorMessage('This does not appear to be a Flutter project (pubspec.yaml not found).');
+                return;
+            }
+        }
+
+        // For pod install, check if ios folder exists
+        if (utilType === 'podInstall') {
+            const iosPath = path.join(workspaceFolder, 'ios');
+            if (!fs.existsSync(iosPath)) {
+                vscode.window.showErrorMessage('iOS folder not found. This project may not support iOS.');
+                return;
+            }
+        }
+
+        // Get Flutter command from settings
+        const flutterCommand = getFlutterCommand();
+
+        // Handle different utility types
+        switch (utilType) {
+            case 'flutterVersion':
+                await utilityRunner.executeFlutterVersion(workspaceFolder, flutterCommand);
+                break;
+
+            case 'clean':
+                await utilityRunner.executeClean(workspaceFolder, flutterCommand);
+                break;
+
+            case 'pubGet':
+                await utilityRunner.executePubGet(workspaceFolder, flutterCommand);
+                break;
+
+            case 'cleanAndPubGet':
+                // Ask if user wants to delete pubspec.lock
+                const deleteLockChoice = await vscode.window.showQuickPick(
+                    [
+                        { label: 'Yes', description: 'Delete pubspec.lock before clean & pub get', value: true },
+                        { label: 'No', description: 'Keep pubspec.lock', value: false }
+                    ],
+                    {
+                        placeHolder: 'Delete pubspec.lock?',
+                        ignoreFocusOut: true
+                    }
+                );
+
+                if (deleteLockChoice !== undefined) {
+                    await utilityRunner.executeCleanAndPubGet(
+                        workspaceFolder,
+                        flutterCommand,
+                        deleteLockChoice.value
+                    );
+                }
+                break;
+
+            case 'podInstall':
+                await utilityRunner.executePodInstall(workspaceFolder);
+                break;
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Utility command error: ${error.message}`);
+    }
+}
+
+/**
  * Open folder in Finder (macOS) or Explorer (Windows/Linux)
  */
 function openFolderInFinder(folderPath: string): void {
@@ -263,5 +377,8 @@ function openFolderInFinder(folderPath: string): void {
 export function deactivate() {
     if (buildRunner) {
         buildRunner.dispose();
+    }
+    if (utilityRunner) {
+        utilityRunner.dispose();
     }
 }
