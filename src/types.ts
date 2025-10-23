@@ -43,13 +43,19 @@ export enum BuildType {
 
 export interface BuildSession {
     id: string;
-    buildType: BuildType;
+    buildType?: BuildType;
     buildName: string;
     status: SessionStatus;
     startTime: Date;
     endTime?: Date;
     steps: BuildStepStatus[];
     workspaceFolder?: string;
+    sessionType: SessionType;
+}
+
+export enum SessionType {
+    Build = 'build',
+    Utility = 'utility'
 }
 
 export interface BuildStepStatus {

@@ -4,7 +4,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { BuildSession, BuildStepStatus, BuildType, CommandStatus, SessionStatus } from './types';
+import { BuildSession, BuildStepStatus, BuildType, CommandStatus, SessionStatus, SessionType } from './types';
 
 export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<BuildTreeItem | undefined | null | void> = new vscode.EventEmitter<BuildTreeItem | undefined | null | void>();
@@ -108,12 +108,8 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                            this.recentSessions.find(s => s.id === element.sessionId!);
 
             if (session && session.status === SessionStatus.Completed && session.workspaceFolder) {
-                // Only show for actual builds (APK, IPA, Web), not utility commands
-                const isUtilityCommand = session.buildName === 'Clean' ||
-                                        session.buildName === 'Pub Get' ||
-                                        session.buildName === 'Clean & Pub Get';
-
-                if (!isUtilityCommand) {
+                // Only show for actual build sessions, not utility sessions
+                if (session.sessionType === SessionType.Build) {
                     const openFolderItem = this.createOpenFolderItem(session);
                     if (openFolderItem) {
                         children.push(openFolderItem);
@@ -207,6 +203,30 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'utilAction',
                 new vscode.ThemeIcon('info', new vscode.ThemeColor('charts.purple')),
                 'flutter-build-utils.flutterVersion'
+            ),
+            new BuildTreeItem(
+                '  Build Runner',
+                'Generate code with build_runner',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('gear', new vscode.ThemeColor('charts.yellow')),
+                'flutter-build-utils.buildRunner'
+            ),
+            new BuildTreeItem(
+                '  Analyze',
+                'Run flutter analyze',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('search', new vscode.ThemeColor('charts.purple')),
+                'flutter-build-utils.flutterAnalyze'
+            ),
+            new BuildTreeItem(
+                '  Format',
+                'Run flutter format',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('symbol-color', new vscode.ThemeColor('charts.pink')),
+                'flutter-build-utils.flutterFormat'
             ),
             new BuildTreeItem(
                 '  Clean',
@@ -392,7 +412,11 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
     /**
      * Get output path for build type
      */
-    private getOutputPath(buildType: BuildType): string {
+    private getOutputPath(buildType?: BuildType): string {
+        if (!buildType) {
+            return 'build';
+        }
+
         switch (buildType) {
             case BuildType.APK:
                 return 'build/app/outputs/flutter-apk';

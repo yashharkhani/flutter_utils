@@ -13,6 +13,9 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 ### 🛠️ Utility Commands
 
 - **Flutter Version** - Check installed Flutter version (works with FVM or system Flutter)
+- **Build Runner** - Generate freezed/json_serializable classes with `dart run build_runner build --delete-conflicting-outputs`
+- **Analyze** - Run `flutter analyze` to check code for issues
+- **Format** - Run `flutter format` to format all Dart files
 - **Clean** - Run `flutter clean` to remove build artifacts
 - **Pub Get** - Run `flutter pub get` to fetch dependencies
 - **Clean & Pub Get** - Combined clean and pub get with optional pubspec.lock deletion
@@ -51,6 +54,9 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 
 **UTILS Section:**
    - ℹ️ **Flutter Version** - Check Flutter version
+   - ⚙️ **Build Runner** - Generate code files (freezed, json_serializable)
+   - 🔍 **Analyze** - Check code for issues
+   - 🎨 **Format** - Format all Dart files
    - 🗑️ **Clean** - Clean build artifacts
    - 📥 **Pub Get** - Fetch dependencies
    - 🔄 **Clean & Pub Get** - Combined clean and pub get
@@ -209,6 +215,9 @@ This extension contributes the following commands:
 
 **Utility Commands:**
 - `flutter-build-utils.flutterVersion` - Check Flutter version
+- `flutter-build-utils.buildRunner` - Generate code with build_runner
+- `flutter-build-utils.flutterAnalyze` - Analyze Dart code
+- `flutter-build-utils.flutterFormat` - Format Dart code
 - `flutter-build-utils.clean` - Run flutter clean
 - `flutter-build-utils.pubGet` - Run flutter pub get
 - `flutter-build-utils.cleanAndPubGet` - Clean & Pub Get with optional pubspec.lock deletion
@@ -288,16 +297,19 @@ Initial release with support for:
 - Android APK builds
 - iOS IPA builds
 - Web builds with base-href
-- Utility commands (Clean, Pub Get, Clean & Pub Get)
+- Utility commands (Version, Build Runner, Analyze, Format, Clean, Pub Get, Clean & Pub Get, Pod Install)
 - Sidebar UI with organized sections (Build/Utils)
 - Real-time command-by-command status tracking in sidebar
 - Build history (last 5 builds) with timing
 - Expandable error details in sidebar
 - One-click access to build output folders (APK/IPA/Web)
 - Cross-platform folder opening (macOS/Windows/Linux)
-- Configurable Flutter command prefix
+- Configurable Flutter command prefix (supports FVM)
+- Automatic Dart command derivation from Flutter command
 - Smart build sequencing with multiple clean/pub get cycles
-- Quick utilities for common Flutter tasks
+- Code generation with build_runner
+- Code quality checks with analyze and format
+- iOS dependency management with Pod Install
 - Detailed output logging
 - Status bar progress indicators
 

@@ -89,6 +89,21 @@
         "command": "flutter-build-utils.podInstall",
         "title": "Flutter: Pod Install",
         "icon": "$(package)"
+      },
+      {
+        "command": "flutter-build-utils.buildRunner",
+        "title": "Flutter: Build Runner",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "flutter-build-utils.flutterAnalyze",
+        "title": "Flutter: Analyze",
+        "icon": "$(search)"
+      },
+      {
+        "command": "flutter-build-utils.flutterFormat",
+        "title": "Flutter: Format",
+        "icon": "$(symbol-color)"
       }
     ],
     "menus": {

@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { BuildTreeProvider } from './buildTreeView';
-import { BuildSession, BuildStep, BuildType, CommandStatus, SessionStatus } from './types';
+import { BuildSession, BuildStep, CommandStatus, SessionStatus, SessionType } from './types';
 
 const execAsync = promisify(exec);
 
@@ -99,6 +99,66 @@ export class UtilityRunner {
     }
 
     /**
+     * Execute build runner
+     */
+    async executeBuildRunner(workspaceFolder: string, dartCommand: string, flutterCommand: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'build-runner',
+                description: 'Generate code with build_runner',
+                command: `${dartCommand} run build_runner build --delete-conflicting-outputs`
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand, // Pass flutter command for version check
+            'Build Runner',
+            steps
+        );
+    }
+
+    /**
+     * Execute flutter analyze
+     */
+    async executeFlutterAnalyze(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'analyze',
+                description: 'Analyze Dart code',
+                command: '{FLUTTER_CMD} analyze'
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            'Flutter Analyze',
+            steps
+        );
+    }
+
+    /**
+     * Execute dart format
+     */
+    async executeFlutterFormat(workspaceFolder: string, dartCommand: string, flutterCommand: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'format',
+                description: 'Format Dart code (line length: 80)',
+                command: `${dartCommand} format . -l 80`
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand, // For version check
+            'Dart Format',
+            steps
+        );
+    }
+
+    /**
      * Execute clean command
      */
     async executeClean(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
@@ -164,7 +224,7 @@ export class UtilityRunner {
     /**
      * Execute pod install
      */
-    async executePodInstall(workspaceFolder: string): Promise<boolean> {
+    async executePodInstall(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
         const steps: BuildStep[] = [
             {
                 id: 'remove-pods',
@@ -184,23 +244,23 @@ export class UtilityRunner {
             {
                 id: 'pod-deintegrate',
                 description: 'Pod deintegrate',
-                command: 'cd ios && pod deintegrate'
+                command: 'export LANG=en_US.UTF-8 && cd ios && pod deintegrate'
             },
             {
                 id: 'pod-setup',
                 description: 'Pod setup',
-                command: 'cd ios && pod setup'
+                command: 'export LANG=en_US.UTF-8 && cd ios && pod setup'
             },
             {
                 id: 'pod-install',
                 description: 'Pod install',
-                command: 'cd ios && pod install'
+                command: 'export LANG=en_US.UTF-8 && cd ios && pod install'
             }
         ];
 
         return this.executeUtilityWithSession(
             workspaceFolder,
-            '', // No flutter command needed for pod install
+            flutterCommand, // Pass flutter command for version check
             'Pod Install',
             steps
         );
@@ -231,11 +291,11 @@ export class UtilityRunner {
         const sessionId = `util-${Date.now()}`;
         const session: BuildSession = {
             id: sessionId,
-            buildType: BuildType.APK, // Use APK as placeholder for utils
             buildName: utilityName,
             status: SessionStatus.Running,
             startTime: new Date(),
             workspaceFolder: workspaceFolder,
+            sessionType: SessionType.Utility,
             steps: steps.map(step => ({
                 step,
                 status: CommandStatus.Waiting

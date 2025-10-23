@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { BuildTreeProvider } from './buildTreeView';
-import { BuildConfig, BuildSession, BuildStep, BuildType, CommandStatus, SessionStatus } from './types';
+import { BuildConfig, BuildSession, BuildStep, BuildType, CommandStatus, SessionStatus, SessionType } from './types';
 
 const execAsync = promisify(exec);
 
@@ -62,6 +62,7 @@ export class BuildRunner {
             status: SessionStatus.Running,
             startTime: new Date(),
             workspaceFolder: workspaceFolder,
+            sessionType: SessionType.Build,
             steps: steps.map(step => ({
                 step,
                 status: CommandStatus.Waiting

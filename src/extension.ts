@@ -94,6 +94,21 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleUtilityCommand('podInstall')
     );
 
+    const buildRunnerCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.buildRunner',
+        () => handleUtilityCommand('buildRunner')
+    );
+
+    const flutterAnalyzeCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.flutterAnalyze',
+        () => handleUtilityCommand('flutterAnalyze')
+    );
+
+    const flutterFormatCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.flutterFormat',
+        () => handleUtilityCommand('flutterFormat')
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -102,6 +117,9 @@ export function activate(context: vscode.ExtensionContext) {
         clearSessionsCommand,
         openOutputFolderCommand,
         flutterVersionCommand,
+        buildRunnerCommand,
+        flutterAnalyzeCommand,
+        flutterFormatCommand,
         cleanCommand,
         pubGetCommand,
         cleanAndPubGetCommand,
@@ -237,6 +255,17 @@ function getFlutterCommand(): string {
 }
 
 /**
+ * Get Dart command from Flutter command settings
+ * Converts flutter command to dart command (e.g., "fvm flutter" -> "fvm dart")
+ */
+function getDartCommand(): string {
+    const flutterCommand = getFlutterCommand();
+
+    // Replace "flutter" with "dart" in the command
+    return flutterCommand.replace('flutter', 'dart');
+}
+
+/**
  * Get base-href for web builds
  */
 async function getBaseHref(): Promise<string | undefined> {
@@ -265,7 +294,7 @@ async function getBaseHref(): Promise<string | undefined> {
 /**
  * Handle utility command execution
  */
-async function handleUtilityCommand(utilType: 'flutterVersion' | 'clean' | 'pubGet' | 'cleanAndPubGet' | 'podInstall'): Promise<void> {
+async function handleUtilityCommand(utilType: 'flutterVersion' | 'buildRunner' | 'flutterAnalyze' | 'flutterFormat' | 'clean' | 'pubGet' | 'cleanAndPubGet' | 'podInstall'): Promise<void> {
     try {
         // Get workspace folder
         const workspaceFolder = await getWorkspaceFolder();
@@ -292,13 +321,26 @@ async function handleUtilityCommand(utilType: 'flutterVersion' | 'clean' | 'pubG
             }
         }
 
-        // Get Flutter command from settings
+        // Get Flutter and Dart commands from settings
         const flutterCommand = getFlutterCommand();
+        const dartCommand = getDartCommand();
 
         // Handle different utility types
         switch (utilType) {
             case 'flutterVersion':
                 await utilityRunner.executeFlutterVersion(workspaceFolder, flutterCommand);
+                break;
+
+            case 'buildRunner':
+                await utilityRunner.executeBuildRunner(workspaceFolder, dartCommand, flutterCommand);
+                break;
+
+            case 'flutterAnalyze':
+                await utilityRunner.executeFlutterAnalyze(workspaceFolder, flutterCommand);
+                break;
+
+            case 'flutterFormat':
+                await utilityRunner.executeFlutterFormat(workspaceFolder, dartCommand, flutterCommand);
                 break;
 
             case 'clean':
@@ -332,7 +374,7 @@ async function handleUtilityCommand(utilType: 'flutterVersion' | 'clean' | 'pubG
                 break;
 
             case 'podInstall':
-                await utilityRunner.executePodInstall(workspaceFolder);
+                await utilityRunner.executePodInstall(workspaceFolder, flutterCommand);
                 break;
         }
 
