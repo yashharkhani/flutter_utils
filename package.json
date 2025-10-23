@@ -1,6 +1,6 @@
 {
   "name": "flutter-build-utils",
-  "displayName": "FLUTTERKIT",
+  "displayName": "flutter-toolbox",
   "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), and MCP config generators. Real-time status tracking in sidebar.",
   "version": "0.0.1",
   "publisher": "skalex",
@@ -19,7 +19,7 @@
       "activitybar": [
         {
           "id": "flutter-build-utils",
-          "title": "FLUTTERKIT",
+          "title": "flutter-toolbox",
           "icon": "resources/flutter-icon.svg"
         }
       ]
@@ -131,7 +131,7 @@
       ]
     },
     "configuration": {
-      "title": "FLUTTERKIT",
+      "title": "flutter-toolbox",
       "properties": {
         "flutterBuildUtils.flutterCommand": {
           "type": "string",

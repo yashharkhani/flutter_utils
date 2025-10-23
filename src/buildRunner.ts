@@ -16,7 +16,7 @@ export class BuildRunner {
     private treeProvider?: BuildTreeProvider;
 
     constructor(treeProvider?: BuildTreeProvider) {
-        this.outputChannel = vscode.window.createOutputChannel('FLUTTERKIT');
+        this.outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.treeProvider = treeProvider;
     }

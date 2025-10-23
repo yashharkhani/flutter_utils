@@ -71,7 +71,7 @@ In the new Extension Development Host window that opens:
 
 ### Viewing Logs
 
-- **Extension Output**: View → Output → Select "FLUTTERKIT"
+- **Extension Output**: View → Output → Select "flutter-toolbox"
 - **Debug Console**: View → Debug Console (shows console.log from your code)
 - **Developer Tools**: Help → Toggle Developer Tools
 

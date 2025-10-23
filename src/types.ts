@@ -1,5 +1,5 @@
 /**
- * Types and interfaces for FLUTTERKIT extension
+ * Types and interfaces for flutter-toolbox extension
  */
 
 export interface BuildCommand {

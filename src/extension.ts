@@ -1,5 +1,5 @@
 /**
- * FLUTTERKIT Extension
+ * flutter-toolbox Extension
  * Main extension file
  */
 
@@ -17,7 +17,7 @@ let utilityRunner: UtilityRunner;
 let treeDataProvider: BuildTreeProvider;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('FLUTTERKIT extension is now active');
+    console.log('flutter-toolbox extension is now active');
 
     // Initialize tree view provider first
     treeDataProvider = new BuildTreeProvider();
@@ -466,7 +466,7 @@ async function handleGenerateMcpConfig(): Promise<void> {
         const configJson = JSON.stringify(mcpConfig, null, 2);
 
         // Show in output channel
-        const outputChannel = vscode.window.createOutputChannel('FLUTTERKIT');
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
         outputChannel.clear();
         outputChannel.show(true);
 
@@ -566,7 +566,7 @@ async function handleGenerateFyersLaunchConfig(): Promise<void> {
         const configJson = JSON.stringify(launchConfigs, null, 4);
 
         // Show in output channel
-        const outputChannel = vscode.window.createOutputChannel('FLUTTERKIT');
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
         outputChannel.clear();
         outputChannel.show(true);
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# FLUTTERKIT - Build Script
+# flutter-toolbox - Build Script
 # This script builds the VS Code extension with all necessary checks
 
 set -e  # Exit on any error
@@ -38,7 +38,7 @@ print_info() {
 }
 
 # Start build process
-print_header "FLUTTERKIT - Build Script"
+print_header "flutter-toolbox - Build Script"
 
 # Check 1: Node.js and npm
 print_info "Checking Node.js and npm..."
