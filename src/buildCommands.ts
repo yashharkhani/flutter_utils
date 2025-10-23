@@ -8,7 +8,7 @@ import { BuildConfig, BuildType } from './types';
 /**
  * Get the build configuration for a specific build type
  */
-export function getBuildConfig(buildType: BuildType, baseHref?: string): BuildConfig {
+export function getBuildConfig(buildType: BuildType, baseHref?: string, useWasm?: boolean): BuildConfig {
     const configs: Record<BuildType, BuildConfig> = {
         [BuildType.APK]: {
             name: 'Android APK',
@@ -149,8 +149,8 @@ export function getBuildConfig(buildType: BuildType, baseHref?: string): BuildCo
                 },
                 {
                     id: 'build-web-1',
-                    description: 'Build Web (1st build)',
-                    command: `{FLUTTER_CMD} build web --release --base-href ${baseHref || '/'}`
+                    description: useWasm ? 'Build Web with WASM (1st build)' : 'Build Web (1st build)',
+                    command: `{FLUTTER_CMD} build web --release --base-href ${baseHref || '/'}${useWasm ? ' --wasm' : ''}`
                 },
                 {
                     id: 'clean-3',
@@ -164,8 +164,8 @@ export function getBuildConfig(buildType: BuildType, baseHref?: string): BuildCo
                 },
                 {
                     id: 'build-web-2',
-                    description: 'Build Web (final build)',
-                    command: `{FLUTTER_CMD} build web --release --base-href ${baseHref || '/'}`
+                    description: useWasm ? 'Build Web with WASM (final build)' : 'Build Web (final build)',
+                    command: `{FLUTTER_CMD} build web --release --base-href ${baseHref || '/'}${useWasm ? ' --wasm' : ''}`
                 }
             ]
         }

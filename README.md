@@ -8,7 +8,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 
 - **Build APK** - Generate Android APK with optimized build sequence
 - **Build IPA** - Generate iOS IPA with optimized build sequence
-- **Build Web** - Generate web build with customizable base-href
+- **Build Web** - Generate web build with customizable base-href and optional WebAssembly (WASM) support
 
 ### 🛠️ Utility Commands
 
@@ -38,6 +38,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Smart Build Sequencing** - Automated clean, pub get, and build cycles for optimal results
 - **Optional pubspec.lock Deletion** - Choose whether to delete pubspec.lock before each build
 - **Base-href Support** - Configure base-href for web builds with built-in validation
+- **WebAssembly (WASM) Support** - Optional WASM compilation for web builds with better performance
 - **Detailed Output Logging** - View complete build logs in dedicated output channel
 - **Command Palette Integration** - Access builds via Command Palette or sidebar
 - **Cross-Platform** - Works on macOS, Windows, and Linux
@@ -73,7 +74,9 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 
 4. Follow the prompts:
    - Choose whether to delete `pubspec.lock`
-   - For web builds: Enter base-href (default: `/`)
+   - For web builds:
+     - Enter base-href (default: `/`)
+     - Choose whether to use WebAssembly (WASM)
    - Confirm to start the build
 
 5. **Watch real-time progress** in the sidebar:
@@ -354,10 +357,10 @@ The generated `flutter-build-utils-0.0.1.vsix` can be installed or shared with o
 Initial release with support for:
 - Android APK builds
 - iOS IPA builds
-- Web builds with base-href
+- Web builds with base-href and optional WebAssembly (WASM)
 - Utility commands (Version, Build Runner, Analyze, Format, Clean, Pub Get, Clean & Pub Get, Pod Install)
-- MCP configuration generator for FyUI library
-- Sidebar UI with organized sections (Build/Utils/MCP)
+- MCP configuration generators (FyUI MCP, Fyers App Launch Config)
+- Sidebar UI with organized sections (Build/Utils/Environment setups)
 - Real-time command-by-command status tracking in sidebar
 - Build history (last 5 builds) with timing
 - Expandable error details in sidebar
@@ -369,7 +372,9 @@ Initial release with support for:
 - Code generation with build_runner
 - Code quality checks with analyze and format
 - iOS dependency management with Pod Install with UTF-8 encoding fix
+- WebAssembly compilation option for web builds
 - Model Context Protocol integration support
+- VS Code launch.json generator for Fyers App
 - Automatic clipboard copy for generated configs
 - Detailed output logging
 - Status bar progress indicators

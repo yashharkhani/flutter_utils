@@ -167,6 +167,7 @@ async function handleBuild(buildType: BuildType): Promise<void> {
 
         // Get build-specific options
         let baseHref: string | undefined;
+        let useWasm: boolean | undefined;
         let deletePubspecLock = false;
 
         // Ask if user wants to delete pubspec.lock
@@ -187,16 +188,34 @@ async function handleBuild(buildType: BuildType): Promise<void> {
 
         deletePubspecLock = !deleteLockChoice.value;
 
-        // For web builds, get base-href
+        // For web builds, get base-href and WASM option
         if (buildType === BuildType.Web) {
             baseHref = await getBaseHref();
             if (baseHref === undefined) {
                 return; // User cancelled
             }
+
+            // Ask if user wants to use WASM
+            const wasmChoice = await vscode.window.showQuickPick(
+                [
+                    { label: 'No', description: 'Build with JavaScript (standard)', value: false },
+                    { label: 'Yes', description: 'Build with WebAssembly (--wasm)', value: true }
+                ],
+                {
+                    placeHolder: 'Use WebAssembly (WASM) for web build?',
+                    ignoreFocusOut: true
+                }
+            );
+
+            if (wasmChoice === undefined) {
+                return; // User cancelled
+            }
+
+            useWasm = wasmChoice.value;
         }
 
         // Get build configuration
-        const config = getBuildConfig(buildType, baseHref);
+        const config = getBuildConfig(buildType, baseHref, useWasm);
 
         // Show confirmation
         const proceed = await vscode.window.showQuickPick(
