@@ -1,5 +1,5 @@
 /**
- * Tree View Provider for Flutter Build Utils Sidebar
+ * Tree View Provider for FLUTTERKIT Sidebar
  */
 
 import * as path from 'path';

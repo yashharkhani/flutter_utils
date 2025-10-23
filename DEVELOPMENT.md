@@ -71,7 +71,7 @@ In the new Extension Development Host window that opens:
 
 ### Viewing Logs
 
-- **Extension Output**: View → Output → Select "Flutter Build Utils"
+- **Extension Output**: View → Output → Select "FLUTTERKIT"
 - **Debug Console**: View → Debug Console (shows console.log from your code)
 - **Developer Tools**: Help → Toggle Developer Tools
 
@@ -107,11 +107,36 @@ After changing, reload the extension to test.
 
 ## Building for Distribution
 
-### Package as VSIX
+### Quick Build (Recommended)
+
+Use the automated build script:
+
+```bash
+./build.sh
+```
+
+This script will:
+- ✅ Check all prerequisites
+- ✅ Run linter
+- ✅ Clean previous builds
+- ✅ Compile TypeScript
+- ✅ Validate output
+- ✅ Create VSIX package
+- ✅ Show installation instructions
+
+### Manual Build
+
+If you prefer manual steps:
 
 ```bash
 # Install vsce (VS Code Extension manager) globally
 npm install -g @vscode/vsce
+
+# Run linter
+npm run lint
+
+# Compile TypeScript
+npm run compile
 
 # Package the extension
 vsce package

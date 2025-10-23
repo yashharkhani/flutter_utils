@@ -1,4 +1,4 @@
-# Flutter Build Utils
+# FLUTTERKIT
 
 A powerful VS Code extension that streamlines Flutter build processes for APK, IPA, and Web builds with intelligent command sequencing and real-time progress tracking.
 
@@ -49,7 +49,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 #### Method 1: Using Sidebar (Recommended)
 
 1. Open a Flutter project in VS Code
-2. Click the **Flutter Build Utils** icon in the Activity Bar (left sidebar)
+2. Click the **FLUTTERKIT** icon in the Activity Bar (left sidebar)
 3. Choose from the available options:
 
 **BUILD Section:**
@@ -109,7 +109,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
   - Failed steps are expandable to show error details
   - Use 🗑️ "Clear Build History" button to remove old builds
 - **Status Bar** (bottom): Shows current build step with spinner
-- **Output Panel**: View → Output → Select "Flutter Build Utils" for detailed logs
+- **Output Panel**: View → Output → Select "FLUTTERKIT" for detailed logs
 - **Notifications**: Success/error messages appear as popup notifications
 
 ### Using MCP Config Generators
@@ -196,7 +196,7 @@ Build command sequences are defined in `src/buildCommands.ts`. To customize:
 When you run a build, the sidebar will show:
 
 ```
-FLUTTER BUILD UTILS
+FLUTTERKIT
 ├── 📱 Build APK
 ├── 📱 Build IPA
 ├── 🌐 Build Web
@@ -214,7 +214,7 @@ FLUTTER BUILD UTILS
 After completion:
 
 ```
-FLUTTER BUILD UTILS
+FLUTTERKIT
 ├── 📱 Build APK
 ├── 📱 Build IPA
 ├── 🌐 Build Web
@@ -271,14 +271,14 @@ This extension contributes the following commands:
 
 ## Output and Logs
 
-All build output is logged to the **Flutter Build Utils** output channel:
+All build output is logged to the **FLUTTERKIT** output channel:
 
 - Step-by-step progress with status indicators
 - Command execution details
 - Standard output and error streams
 - Detailed error information on failures
 
-Access via: `View → Output → Flutter Build Utils`
+Access via: `View → Output → FLUTTERKIT`
 
 ## Troubleshooting
 
@@ -316,6 +316,23 @@ npm run watch
 # Run linter
 npm run lint
 ```
+
+### Building VSIX Package
+
+Use the automated build script:
+
+```bash
+./build.sh
+```
+
+This will:
+- Check all prerequisites (Node.js, npm, dependencies)
+- Run linter and validate code quality
+- Clean and compile TypeScript
+- Package into VSIX with all validations
+- Show detailed build summary
+
+The generated `flutter-build-utils-0.0.1.vsix` can be installed or shared with others.
 
 ### Project Structure
 

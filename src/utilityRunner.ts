@@ -16,7 +16,7 @@ export class UtilityRunner {
     private treeProvider?: BuildTreeProvider;
 
     constructor(treeProvider?: BuildTreeProvider) {
-        this.outputChannel = vscode.window.createOutputChannel('Flutter Build Utils');
+        this.outputChannel = vscode.window.createOutputChannel('FLUTTERKIT');
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.treeProvider = treeProvider;
     }

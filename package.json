@@ -1,7 +1,7 @@
 {
   "name": "flutter-build-utils",
-  "displayName": "Flutter Build Utils",
-  "description": "Utility extension to help Flutter developers with build commands (APK, IPA, Web)",
+  "displayName": "FLUTTERKIT",
+  "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), and MCP config generators. Real-time status tracking in sidebar.",
   "version": "0.0.1",
   "publisher": "skalex",
   "engines": {
@@ -19,7 +19,7 @@
       "activitybar": [
         {
           "id": "flutter-build-utils",
-          "title": "Flutter Build Utils",
+          "title": "FLUTTERKIT",
           "icon": "resources/flutter-icon.svg"
         }
       ]
@@ -28,9 +28,9 @@
       "flutter-build-utils": [
         {
           "id": "flutterBuildUtilsView",
-          "name": "Build Commands",
+          "name": "Flutter Utils",
           "icon": "resources/flutter-icon.svg",
-          "contextualTitle": "Flutter Build Utils"
+          "contextualTitle": "Flutter Utils"
         }
       ]
     },
@@ -131,7 +131,7 @@
       ]
     },
     "configuration": {
-      "title": "Flutter Build Utils",
+      "title": "FLUTTERKIT",
       "properties": {
         "flutterBuildUtils.flutterCommand": {
           "type": "string",
