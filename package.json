@@ -1,0 +1,123 @@
+{
+  "name": "flutter-build-utils",
+  "displayName": "Flutter Build Utils",
+  "description": "Utility extension to help Flutter developers with build commands (APK, IPA, Web)",
+  "version": "0.0.1",
+  "publisher": "skalex",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/pubspec.yaml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "flutter-build-utils",
+          "title": "Flutter Build Utils",
+          "icon": "resources/flutter-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "flutter-build-utils": [
+        {
+          "id": "flutterBuildUtilsView",
+          "name": "Build Commands",
+          "icon": "resources/flutter-icon.svg",
+          "contextualTitle": "Flutter Build Utils"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "flutter-build-utils.buildApk",
+        "title": "Flutter: Build APK",
+        "icon": "$(device-mobile)"
+      },
+      {
+        "command": "flutter-build-utils.buildIpa",
+        "title": "Flutter: Build IPA",
+        "icon": "$(device-mobile)"
+      },
+      {
+        "command": "flutter-build-utils.buildWeb",
+        "title": "Flutter: Build Web",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "flutter-build-utils.refreshView",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "flutter-build-utils.clearSessions",
+        "title": "Clear Build History",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "flutter-build-utils.openOutputFolder",
+        "title": "Open Output Folder",
+        "icon": "$(folder-opened)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "flutter-build-utils.refreshView",
+          "when": "view == flutterBuildUtilsView",
+          "group": "navigation"
+        },
+        {
+          "command": "flutter-build-utils.clearSessions",
+          "when": "view == flutterBuildUtilsView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Flutter Build Utils",
+      "properties": {
+        "flutterBuildUtils.flutterCommand": {
+          "type": "string",
+          "default": "fvm flutter",
+          "description": "Flutter command prefix (e.g., 'fvm flutter', 'flutter', or custom)",
+          "enum": [
+            "fvm flutter",
+            "flutter"
+          ],
+          "enumDescriptions": [
+            "Use FVM (Flutter Version Management)",
+            "Use system Flutter"
+          ]
+        },
+        "flutterBuildUtils.customFlutterCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Custom Flutter command prefix (leave empty to use the selection above)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
+  }
+}
