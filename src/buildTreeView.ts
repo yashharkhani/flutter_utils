@@ -297,6 +297,68 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'mcpAction',
                 new vscode.ThemeIcon('debug-alt', new vscode.ThemeColor('charts.blue')),
                 'flutter-build-utils.generateFyersLaunchConfig'
+            ),
+            new BuildTreeItem(
+                '  Add Flutter Cursor Rules',
+                'Add Flutter cursor rules to project',
+                vscode.TreeItemCollapsibleState.None,
+                'mcpAction',
+                new vscode.ThemeIcon('files', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.addFlutterCursorRules'
+            )
+        );
+
+        // Code Generation section header
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
+                'Code Generation',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('code')
+            )
+        );
+
+        // Code generation action buttons
+        items.push(
+            new BuildTreeItem(
+                '  Generate Freezed Cubit/Bloc State',
+                'Generate Cubit/Bloc state boilerplate',
+                vscode.TreeItemCollapsibleState.None,
+                'codeGenAction',
+                new vscode.ThemeIcon('symbol-class', new vscode.ThemeColor('charts.purple')),
+                'flutter-build-utils.generateFreezedCubitState'
+            ),
+            new BuildTreeItem(
+                '  Generate Freezed API State',
+                'Generate API state boilerplate',
+                vscode.TreeItemCollapsibleState.None,
+                'codeGenAction',
+                new vscode.ThemeIcon('symbol-interface', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.generateFreezedApiState'
+            ),
+            new BuildTreeItem(
+                '  Generate Freezed UI State',
+                'Generate UI state boilerplate',
+                vscode.TreeItemCollapsibleState.None,
+                'codeGenAction',
+                new vscode.ThemeIcon('symbol-struct', new vscode.ThemeColor('charts.cyan')),
+                'flutter-build-utils.generateFreezedUiState'
+            ),
+            new BuildTreeItem(
+                '  Generate Freezed Model',
+                'Generate data model boilerplate',
+                vscode.TreeItemCollapsibleState.None,
+                'codeGenAction',
+                new vscode.ThemeIcon('symbol-property', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.generateFreezedModel'
             )
         );
 

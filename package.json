@@ -149,6 +149,31 @@
         "command": "flutter-build-utils.copyCommitHash",
         "title": "Git: Copy Commit Hash",
         "icon": "$(clippy)"
+      },
+      {
+        "command": "flutter-build-utils.generateFreezedCubitState",
+        "title": "Flutter: Generate Freezed Cubit/Bloc State",
+        "icon": "$(symbol-class)"
+      },
+      {
+        "command": "flutter-build-utils.generateFreezedApiState",
+        "title": "Flutter: Generate Freezed API State",
+        "icon": "$(symbol-interface)"
+      },
+      {
+        "command": "flutter-build-utils.generateFreezedUiState",
+        "title": "Flutter: Generate Freezed UI State",
+        "icon": "$(symbol-struct)"
+      },
+      {
+        "command": "flutter-build-utils.generateFreezedModel",
+        "title": "Flutter: Generate Freezed Model",
+        "icon": "$(symbol-property)"
+      },
+      {
+        "command": "flutter-build-utils.addFlutterCursorRules",
+        "title": "Flutter: Add Cursor Rules to Project",
+        "icon": "$(files)"
       }
     ],
     "menus": {

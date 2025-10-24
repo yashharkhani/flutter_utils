@@ -25,6 +25,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 
 - **Generate FyUI MCP Config** - Generate Model Context Protocol configuration for FyUI library
 - **Generate Fyers Launch Config** - Generate VS Code launch.json configurations for Fyers App (web + mobile)
+- **Add Flutter Cursor Rules** - Copy Flutter coding rules and best practices to project's `.cursor/rules/` folder
 
 ### 🔀 Git Actions
 
@@ -35,6 +36,13 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Create PR** - Open GitHub PR creation page (current branch → master)
 - **View PR** - View existing pull requests for current branch
 - **Open Actions** - Open GitHub Actions CI/CD page
+
+### 📝 Code Generation
+
+- **Generate Freezed Cubit/Bloc State** - Generate complete file with all 3 classes (Parent State + APIState + UIState) with customizable UI fields
+- **Generate Freezed API State** - Generate boilerplate freezed code for API state (initial/loading/loaded/error)
+- **Generate Freezed UI State** - Generate boilerplate freezed code for UI state with customizable fields
+- **Generate Freezed Model** - Generate boilerplate freezed code for data models with optional JSON serialization
 
 ### ✨ Key Capabilities
 
@@ -82,6 +90,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 **Environment Setups Section:**
    - 📝 **Generate FyUI MCP Config** - Create MCP configuration for FyUI library
    - 🐛 **Generate Fyers Launch Config** - Create launch.json for Fyers App debugging
+   - 📄 **Add Flutter Cursor Rules** - Add Flutter coding rules to project
 
 **Git Actions Section:**
    - 📂 **Open Repository** - Open GitHub repo in browser
@@ -91,6 +100,12 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
    - ➕ **Create PR** - Create pull request to master
    - 👁️ **View PR** - View PRs for current branch
    - ⚡ **Open Actions** - Open GitHub Actions
+
+**Code Generation Section:**
+   - 📝 **Generate Freezed Cubit/Bloc State** - Generate Cubit/Bloc state boilerplate
+   - 🔧 **Generate Freezed API State** - Generate API state boilerplate
+   - 🎨 **Generate Freezed UI State** - Generate UI state boilerplate
+   - 📦 **Generate Freezed Model** - Generate data model boilerplate
 
 4. Follow the prompts:
    - Choose whether to delete `pubspec.lock`
@@ -162,6 +177,217 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 5. Click **Open launch.json** to:
    - Open existing launch.json, OR
    - Create new launch.json with these configurations
+
+#### Add Flutter Cursor Rules
+
+1. Click **Add Flutter Cursor Rules** in the Environment Setups section
+2. Enter the absolute path to your Flutter project (e.g., `/Users/yourname/projects/flutter_app`)
+3. The extension will:
+   - ✅ Validate the path and check for pubspec.yaml
+   - ✅ Create `.cursor/rules/` directory if it doesn't exist
+   - ✅ Copy `flutter_rules.mdc` to the project
+   - ✅ Display file structure in output panel
+4. Choose action after completion:
+   - **Open File** - View the added rules file
+   - **Add to Another Project** - Copy rules to another project
+   - **Close** - Complete the action
+
+**What are Cursor Rules?**
+
+Cursor rules are coding guidelines and best practices that Cursor AI editor automatically applies when working in your project. The Flutter rules include:
+
+- Dart and Flutter coding conventions
+- BLoC/Cubit state management patterns
+- Freezed immutable class guidelines
+- Clean architecture principles
+- Performance optimization tips
+- Project structure guidelines
+- Naming conventions
+- Testing best practices
+
+**File Location:**
+```
+your_flutter_project/
+└── .cursor/
+    └── rules/
+        └── flutter_rules.mdc
+```
+
+The rules will be automatically applied by Cursor when you work in this project, helping maintain consistent code quality and following Flutter best practices.
+
+### Using Code Generation
+
+Generate freezed boilerplate code with guided prompts. All generated code is automatically copied to clipboard and displayed in the output panel.
+
+#### Generate Freezed Cubit/Bloc State
+
+1. Click **Generate Freezed Cubit/Bloc State** in the Code Generation section
+2. Enter the state class name (e.g., `AuthState`)
+3. Enter the UI state class name (e.g., `AuthUiState`)
+4. Specify the number of fields for the UI state (1-20)
+5. For each field:
+   - Enter field name (e.g., `isLoading`)
+   - Select field type from dropdown
+   - Default values are automatically assigned
+6. Generated code includes **all 3 classes in one complete file**:
+   - Main state class with `APIState` and UI state fields
+   - Complete `APIState` class (initial/loading/loaded/error)
+   - Complete UI state class with your custom fields
+   - All initial factory constructors
+
+Example output (complete file):
+```dart
+@freezed
+abstract class AuthState with _$AuthState {
+  const factory AuthState({
+    required APIState apiState,
+    required AuthUiState uiState,
+  }) = _AuthState;
+
+  factory AuthState.initial() => AuthState(
+        apiState: const APIState.initial(),
+        uiState: AuthUiState.initial(),
+      );
+}
+
+@freezed
+abstract class APIState with _$APIState {
+  const factory APIState.initial() = _APIStateInitial;
+
+  const factory APIState.loading() = _APIStateLoading;
+
+  const factory APIState.loaded({
+    required dynamic data,
+  }) = _APIStateLoaded;
+
+  const factory APIState.error({
+    int? code,
+    String? message,
+    String? status,
+  }) = _APIStateError;
+}
+
+@freezed
+abstract class AuthUiState with _$AuthUiState {
+  const factory AuthUiState({
+    required bool isLoading,
+    required String errorMessage,
+    required int loginAttempts,
+    required User? currentUser,
+  }) = _AuthUiState;
+
+  factory AuthUiState.initial() => const AuthUiState(
+        isLoading: false,
+        errorMessage: '',
+        loginAttempts: 0,
+        currentUser: null,
+      );
+}
+```
+
+#### Generate Freezed API State
+
+1. Click **Generate Freezed API State** in the Code Generation section
+2. Choose whether to use a generic type `<T>` or not
+3. Generated code includes:
+   - Initial state
+   - Loading state
+   - Loaded state (with data)
+   - Error state (with code, message, status)
+
+Example output (with generic):
+```dart
+@freezed
+abstract class APIState<T> with _$APIState<T> {
+  const factory APIState.initial() = _APIStateInitial<T>;
+  const factory APIState.loading() = _APIStateLoading<T>;
+  const factory APIState.loaded({
+    required T data,
+  }) = _APIStateLoaded<T>;
+  const factory APIState.error({
+    int? code,
+    String? message,
+    String? status,
+  }) = _APIStateError<T>;
+}
+```
+
+#### Generate Freezed UI State
+
+1. Click **Generate Freezed UI State** in the Code Generation section
+2. Enter the UI state class name (e.g., `AuthUiState`)
+3. Specify the number of fields (1-20)
+4. For each field:
+   - Enter field name (e.g., `isLoading`)
+   - Select field type from dropdown:
+     - `int`, `double`, `String`, `bool`
+     - `List`, `Map`, `dynamic`
+     - Custom (nullable) - prompts for custom type
+   - Default values are automatically assigned based on type
+5. Generated code includes:
+   - Field declarations
+   - Initial factory constructor with default values
+
+Example output:
+```dart
+@freezed
+abstract class AuthUiState with _$AuthUiState {
+  const factory AuthUiState({
+    required bool isLoading,
+    required String errorMessage,
+    required int loginAttempts,
+    required User? currentUser,
+  }) = _AuthUiState;
+
+  factory AuthUiState.initial() => const AuthUiState(
+        isLoading: false,
+        errorMessage: '',
+        loginAttempts: 0,
+        currentUser: null,
+      );
+}
+```
+
+#### Generate Freezed Model
+
+1. Click **Generate Freezed Model** in the Code Generation section
+2. Enter the model class name (e.g., `User`)
+3. Choose whether to include JSON serialization (fromJson/toJson)
+4. Specify the number of fields (1-20)
+5. For each field:
+   - Enter field name (e.g., `userId`)
+   - Select field type from dropdown:
+     - `int`, `int?`, `double`, `double?`
+     - `String`, `String?`, `bool`, `bool?`
+     - `List<dynamic>`, `Map<String, dynamic>`
+     - Custom - prompts for custom type
+   - If JSON serialization is enabled, optionally specify JSON key (if different from field name)
+6. Generated code includes:
+   - Field declarations with `@JsonKey` annotations (if needed)
+   - Optional fromJson factory method
+
+Example output (with JSON serialization):
+```dart
+@freezed
+abstract class User with _$User {
+  const factory User({
+    @JsonKey(name: 'user_id') required String userId,
+    required String name,
+    required String? email,
+    required int age,
+  }) = _User;
+
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+}
+```
+
+**Note**: For models with JSON serialization, remember to add:
+```dart
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'user.freezed.dart';
+part 'user.g.dart';
+```
 
 #### Git Actions
 
@@ -327,6 +553,7 @@ This extension contributes the following commands:
 **Environment Setup Commands:**
 - `flutter-build-utils.generateMcpConfig` - Generate FyUI MCP configuration
 - `flutter-build-utils.generateFyersLaunchConfig` - Generate Fyers App launch configurations
+- `flutter-build-utils.addFlutterCursorRules` - Add Flutter cursor rules to project
 
 **Git Action Commands:**
 - `flutter-build-utils.openRepository` - Open GitHub repository in browser
@@ -336,6 +563,12 @@ This extension contributes the following commands:
 - `flutter-build-utils.createPR` - Create pull request
 - `flutter-build-utils.viewPR` - View pull requests for current branch
 - `flutter-build-utils.openActions` - Open GitHub Actions
+
+**Code Generation Commands:**
+- `flutter-build-utils.generateFreezedCubitState` - Generate freezed Cubit/Bloc state boilerplate
+- `flutter-build-utils.generateFreezedApiState` - Generate freezed API state boilerplate
+- `flutter-build-utils.generateFreezedUiState` - Generate freezed UI state boilerplate
+- `flutter-build-utils.generateFreezedModel` - Generate freezed model boilerplate
 
 **Other Commands:**
 - `flutter-build-utils.refreshView` - Refresh sidebar view
@@ -450,6 +683,15 @@ Initial release with support for:
 - Automatic URL opening in default browser
 - Cross-platform browser support (macOS/Windows/Linux)
 - Automatic clipboard copy for generated configs
+- Code generation utilities for freezed boilerplate (Cubit/Bloc state, API state, UI state, Models)
+- Interactive prompts for code generation with validation
+- Support for generic types in API state generation
+- JSON serialization support in model generation
+- Customizable field types and default values
+- Automatic clipboard copy for generated code
+- Flutter cursor rules setup for projects (with Cursor AI coding guidelines)
+- Automatic directory creation for cursor rules
+- File validation and error handling
 - Detailed output logging
 - Status bar progress indicators
 

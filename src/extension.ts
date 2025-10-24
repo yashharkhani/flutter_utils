@@ -11,6 +11,12 @@ import { BuildRunner } from './buildRunner';
 import { BuildTreeItem, BuildTreeProvider } from './buildTreeView';
 import { BuildType } from './types';
 import { UtilityRunner } from './utilityRunner';
+import {
+    generateFreezedApiState,
+    generateFreezedCubitState,
+    generateFreezedModel,
+    generateFreezedUiState
+} from './codeGenerator';
 
 let buildRunner: BuildRunner;
 let utilityRunner: UtilityRunner;
@@ -156,6 +162,32 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleGitAction('copyCommitHash')
     );
 
+    // Code generation commands
+    const generateFreezedCubitStateCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.generateFreezedCubitState',
+        () => generateFreezedCubitState()
+    );
+
+    const generateFreezedApiStateCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.generateFreezedApiState',
+        () => generateFreezedApiState()
+    );
+
+    const generateFreezedUiStateCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.generateFreezedUiState',
+        () => generateFreezedUiState()
+    );
+
+    const generateFreezedModelCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.generateFreezedModel',
+        () => generateFreezedModel()
+    );
+
+    const addFlutterCursorRulesCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.addFlutterCursorRules',
+        () => handleAddFlutterCursorRules(context)
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -180,6 +212,11 @@ export function activate(context: vscode.ExtensionContext) {
         createPRCommand,
         viewPRCommand,
         openActionsCommand,
+        generateFreezedCubitStateCommand,
+        generateFreezedApiStateCommand,
+        generateFreezedUiStateCommand,
+        generateFreezedModelCommand,
+        addFlutterCursorRulesCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -958,6 +995,102 @@ function openFolderInFinder(folderPath: string): void {
             vscode.window.showErrorMessage(`Failed to open folder: ${error.message}`);
         }
     });
+}
+
+/**
+ * Handle adding Flutter cursor rules to a project
+ */
+async function handleAddFlutterCursorRules(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        // Prompt for project path
+        const projectPath = await vscode.window.showInputBox({
+            prompt: 'Enter the path to your Flutter project',
+            placeHolder: '/Users/yourname/projects/your_flutter_app',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Path cannot be empty';
+                }
+                const normalizedValue = value.replace(/\/$/, '');
+                // Check if path exists
+                if (!fs.existsSync(normalizedValue)) {
+                    return 'Path does not exist. Please enter a valid path.';
+                }
+                // Check if it has pubspec.yaml
+                const pubspecPath = path.join(normalizedValue, 'pubspec.yaml');
+                if (!fs.existsSync(pubspecPath)) {
+                    return 'pubspec.yaml not found. Please ensure this is a valid Flutter project.';
+                }
+                return null;
+            }
+        });
+
+        if (!projectPath) {
+            return; // User cancelled
+        }
+
+        // Remove trailing slash if present
+        const normalizedPath = projectPath.replace(/\/$/, '');
+
+        // Create .cursor/rules directory if it doesn't exist
+        const cursorRulesDir = path.join(normalizedPath, '.cursor', 'rules');
+        if (!fs.existsSync(cursorRulesDir)) {
+            fs.mkdirSync(cursorRulesDir, { recursive: true });
+        }
+
+        // Get source file path from extension resources
+        const sourceFilePath = path.join(context.extensionPath, 'resources', 'flutter_rules.mdc');
+
+        // Check if source file exists
+        if (!fs.existsSync(sourceFilePath)) {
+            vscode.window.showErrorMessage('Flutter rules template file not found in extension resources.');
+            return;
+        }
+
+        // Copy file to destination
+        const destinationFilePath = path.join(cursorRulesDir, 'flutter_rules.mdc');
+        fs.copyFileSync(sourceFilePath, destinationFilePath);
+
+        // Show in output channel
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
+        outputChannel.clear();
+        outputChannel.show(true);
+
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Flutter Cursor Rules Added to Project');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.appendLine(`Project Path: ${normalizedPath}`);
+        outputChannel.appendLine(`Rules File: ${destinationFilePath}\n`);
+        outputChannel.appendLine('File Structure Created:');
+        outputChannel.appendLine(`${normalizedPath}/`);
+        outputChannel.appendLine('└── .cursor/');
+        outputChannel.appendLine('    └── rules/');
+        outputChannel.appendLine('        └── flutter_rules.mdc ✓');
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Flutter cursor rules successfully added!');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.appendLine('The rules will be automatically applied when working in this project.');
+
+        // Show success message with action
+        const choice = await vscode.window.showInformationMessage(
+            'Flutter cursor rules successfully added to project!',
+            'Open File',
+            'Add to Another Project',
+            'Close'
+        );
+
+        if (choice === 'Open File') {
+            // Open the created file
+            const doc = await vscode.workspace.openTextDocument(destinationFilePath);
+            await vscode.window.showTextDocument(doc);
+        } else if (choice === 'Add to Another Project') {
+            // Recursively call to add to another project
+            await handleAddFlutterCursorRules(context);
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Error adding Flutter cursor rules: ${error.message}`);
+    }
 }
 
 export function deactivate() {
