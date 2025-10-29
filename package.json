@@ -174,6 +174,16 @@
         "command": "flutter-build-utils.addFlutterCursorRules",
         "title": "Flutter: Add Cursor Rules to Project",
         "icon": "$(files)"
+      },
+      {
+        "command": "flutter-build-utils.gitPush",
+        "title": "Git: Push to Branch",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "flutter-build-utils.gitPull",
+        "title": "Git: Pull from Branch",
+        "icon": "$(arrow-down)"
       }
     ],
     "menus": {

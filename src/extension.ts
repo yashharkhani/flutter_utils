@@ -9,14 +9,14 @@ import * as vscode from 'vscode';
 import { getBuildConfig } from './buildCommands';
 import { BuildRunner } from './buildRunner';
 import { BuildTreeItem, BuildTreeProvider } from './buildTreeView';
-import { BuildType } from './types';
-import { UtilityRunner } from './utilityRunner';
 import {
     generateFreezedApiState,
     generateFreezedCubitState,
     generateFreezedModel,
     generateFreezedUiState
 } from './codeGenerator';
+import { BuildType } from './types';
+import { UtilityRunner } from './utilityRunner';
 
 let buildRunner: BuildRunner;
 let utilityRunner: UtilityRunner;
@@ -188,6 +188,16 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleAddFlutterCursorRules(context)
     );
 
+    const gitPushCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.gitPush',
+        () => handleGitCommand('push')
+    );
+
+    const gitPullCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.gitPull',
+        () => handleGitCommand('pull')
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -217,6 +227,8 @@ export function activate(context: vscode.ExtensionContext) {
         generateFreezedUiStateCommand,
         generateFreezedModelCommand,
         addFlutterCursorRulesCommand,
+        gitPushCommand,
+        gitPullCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -995,6 +1007,54 @@ function openFolderInFinder(folderPath: string): void {
             vscode.window.showErrorMessage(`Failed to open folder: ${error.message}`);
         }
     });
+}
+
+/**
+ * Handle git push/pull command execution
+ */
+async function handleGitCommand(gitType: 'push' | 'pull'): Promise<void> {
+    try {
+        // Get workspace folder
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found.');
+            return;
+        }
+
+        // Get current branch as default
+        const currentBranch = await getCurrentBranch(workspaceFolder);
+
+        // Prompt for branch name
+        const branchName = await vscode.window.showInputBox({
+            prompt: `Enter the branch name to ${gitType}`,
+            placeHolder: currentBranch || 'main',
+            value: currentBranch || '',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Branch name cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!branchName) {
+            return; // User cancelled
+        }
+
+        // Get Flutter command from settings
+        const flutterCommand = getFlutterCommand();
+
+        // Execute git command
+        if (gitType === 'push') {
+            await utilityRunner.executeGitPush(workspaceFolder, branchName.trim(), flutterCommand);
+        } else {
+            await utilityRunner.executeGitPull(workspaceFolder, branchName.trim(), flutterCommand);
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Git ${gitType} error: ${error.message}`);
+    }
 }
 
 /**

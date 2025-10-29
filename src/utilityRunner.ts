@@ -222,6 +222,46 @@ export class UtilityRunner {
     }
 
     /**
+     * Execute git push
+     */
+    async executeGitPush(workspaceFolder: string, branchName: string, flutterCommand: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'git-push',
+                description: `Push to origin/${branchName}`,
+                command: `git push origin ${branchName}`
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            `Git Push (${branchName})`,
+            steps
+        );
+    }
+
+    /**
+     * Execute git pull
+     */
+    async executeGitPull(workspaceFolder: string, branchName: string, flutterCommand: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'git-pull',
+                description: `Pull from origin/${branchName}`,
+                command: `git pull origin ${branchName}`
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            `Git Pull (${branchName})`,
+            steps
+        );
+    }
+
+    /**
      * Execute pod install
      */
     async executePodInstall(workspaceFolder: string, flutterCommand: string): Promise<boolean> {

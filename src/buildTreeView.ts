@@ -383,6 +383,29 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
         // Git action buttons
         items.push(
             new BuildTreeItem(
+                '  Git Push',
+                'Push to origin branch',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('arrow-up', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.gitPush'
+            ),
+            new BuildTreeItem(
+                '  Git Pull',
+                'Pull from origin branch',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('arrow-down', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.gitPull'
+            ),
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
                 '  Open Repository',
                 'Open GitHub repository in browser',
                 vscode.TreeItemCollapsibleState.None,
