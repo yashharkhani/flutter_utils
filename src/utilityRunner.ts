@@ -262,6 +262,28 @@ export class UtilityRunner {
     }
 
     /**
+     * Execute git commit with type
+     */
+    async executeGitCommit(workspaceFolder: string, commitType: string, message: string, flutterCommand: string): Promise<boolean> {
+        const commitMessage = `${commitType}: ${message}`;
+
+        const steps: BuildStep[] = [
+            {
+                id: 'git-commit',
+                description: `Commit: ${commitMessage}`,
+                command: `git commit -m "${commitMessage}"`
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            `Git Commit`,
+            steps
+        );
+    }
+
+    /**
      * Execute pod install
      */
     async executePodInstall(workspaceFolder: string, flutterCommand: string): Promise<boolean> {

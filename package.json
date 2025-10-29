@@ -184,6 +184,11 @@
         "command": "flutter-build-utils.gitPull",
         "title": "Git: Pull from Branch",
         "icon": "$(arrow-down)"
+      },
+      {
+        "command": "flutter-build-utils.gitCommit",
+        "title": "Git: Commit with Type",
+        "icon": "$(git-commit)"
       }
     ],
     "menus": {

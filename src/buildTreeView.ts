@@ -399,11 +399,12 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'flutter-build-utils.gitPull'
             ),
             new BuildTreeItem(
-                '',
-                '',
+                '  Git Commit',
+                'Commit with type selection',
                 vscode.TreeItemCollapsibleState.None,
-                'separator',
-                new vscode.ThemeIcon('dash')
+                'gitAction',
+                new vscode.ThemeIcon('git-commit', new vscode.ThemeColor('charts.purple')),
+                'flutter-build-utils.gitCommit'
             ),
             new BuildTreeItem(
                 '  Open Repository',

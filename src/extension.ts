@@ -198,6 +198,11 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleGitCommand('pull')
     );
 
+    const gitCommitCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.gitCommit',
+        () => handleGitCommit()
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -229,6 +234,7 @@ export function activate(context: vscode.ExtensionContext) {
         addFlutterCursorRulesCommand,
         gitPushCommand,
         gitPullCommand,
+        gitCommitCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -1054,6 +1060,109 @@ async function handleGitCommand(gitType: 'push' | 'pull'): Promise<void> {
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Git ${gitType} error: ${error.message}`);
+    }
+}
+
+/**
+ * Handle git commit with type selection
+ */
+async function handleGitCommit(): Promise<void> {
+    try {
+        // Get workspace folder
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found.');
+            return;
+        }
+
+        // Check if we're in a git repo
+        const exec = require('child_process').exec;
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        try {
+            await execAsync('git rev-parse --is-inside-work-tree', { cwd: workspaceFolder });
+        } catch (error) {
+            vscode.window.showErrorMessage('Not a git repository.');
+            return;
+        }
+
+        // Check if there are staged changes
+        try {
+            const { stdout } = await execAsync('git diff --cached --quiet', { cwd: workspaceFolder });
+        } catch (error: any) {
+            // Non-zero exit code means there are staged changes - this is what we want
+            if (error.code === 1) {
+                // Continue with commit
+            } else {
+                vscode.window.showErrorMessage('Error checking git status.');
+                return;
+            }
+        }
+
+        // If diff --cached --quiet returns 0, there are no staged changes
+        try {
+            const { stdout } = await execAsync('git diff --cached --name-only', { cwd: workspaceFolder });
+            if (!stdout.trim()) {
+                vscode.window.showWarningMessage('⚠️  Nothing to commit (no staged changes)');
+                return;
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage('Error checking staged changes.');
+            return;
+        }
+
+        // Ask user to select commit type
+        const commitTypes = [
+            { label: 'feat', description: 'A new feature', value: 'feat' },
+            { label: 'fix', description: 'A bug fix', value: 'fix' },
+            { label: 'docs', description: 'Documentation only changes', value: 'docs' },
+            { label: 'style', description: 'Code style changes (formatting, etc)', value: 'style' },
+            { label: 'refactor', description: 'Code refactoring', value: 'refactor' },
+            { label: 'perf', description: 'Performance improvements', value: 'perf' },
+            { label: 'test', description: 'Adding or updating tests', value: 'test' },
+            { label: 'chore', description: 'Maintenance tasks', value: 'chore' }
+        ];
+
+        const selectedType = await vscode.window.showQuickPick(commitTypes, {
+            placeHolder: 'Select commit type',
+            ignoreFocusOut: true
+        });
+
+        if (!selectedType) {
+            return; // User cancelled
+        }
+
+        // Ask for commit message
+        const message = await vscode.window.showInputBox({
+            prompt: 'Enter commit message',
+            placeHolder: 'your commit message here',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Commit message cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!message) {
+            return; // User cancelled
+        }
+
+        // Get Flutter command from settings
+        const flutterCommand = getFlutterCommand();
+
+        // Execute git commit
+        await utilityRunner.executeGitCommit(
+            workspaceFolder,
+            selectedType.value,
+            message.trim(),
+            flutterCommand
+        );
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Git commit error: ${error.message}`);
     }
 }
 
