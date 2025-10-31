@@ -1,5 +1,5 @@
 {
-  "name": "flutter-build-utils",
+  "name": "flutter-toolbox",
   "displayName": "flutter-toolbox",
   "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), and MCP config generators. Real-time status tracking in sidebar.",
   "version": "0.0.1",
@@ -18,16 +18,16 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "flutter-build-utils",
+          "id": "flutter-toolbox",
           "title": "flutter-toolbox",
           "icon": "resources/icon.svg"
         }
       ]
     },
     "views": {
-      "flutter-build-utils": [
+      "flutter-toolbox": [
         {
-          "id": "flutterBuildUtilsView",
+          "id": "flutterToolboxView",
           "name": "Flutter Utils",
           "icon": "resources/icon.svg",
           "contextualTitle": "Flutter Utils"
@@ -36,157 +36,157 @@
     },
     "commands": [
       {
-        "command": "flutter-build-utils.buildApk",
+        "command": "flutter-toolbox.buildApk",
         "title": "Flutter: Build APK",
         "icon": "$(device-mobile)"
       },
       {
-        "command": "flutter-build-utils.buildIpa",
+        "command": "flutter-toolbox.buildIpa",
         "title": "Flutter: Build IPA",
         "icon": "$(device-mobile)"
       },
       {
-        "command": "flutter-build-utils.buildWeb",
+        "command": "flutter-toolbox.buildWeb",
         "title": "Flutter: Build Web",
         "icon": "$(globe)"
       },
       {
-        "command": "flutter-build-utils.refreshView",
+        "command": "flutter-toolbox.refreshView",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "flutter-build-utils.clearSessions",
+        "command": "flutter-toolbox.clearSessions",
         "title": "Clear Build History",
         "icon": "$(clear-all)"
       },
       {
-        "command": "flutter-build-utils.openOutputFolder",
+        "command": "flutter-toolbox.openOutputFolder",
         "title": "Open Output Folder",
         "icon": "$(folder-opened)"
       },
       {
-        "command": "flutter-build-utils.flutterVersion",
+        "command": "flutter-toolbox.flutterVersion",
         "title": "Flutter: Check Version",
         "icon": "$(info)"
       },
       {
-        "command": "flutter-build-utils.clean",
+        "command": "flutter-toolbox.clean",
         "title": "Flutter: Clean",
         "icon": "$(trash)"
       },
       {
-        "command": "flutter-build-utils.pubGet",
+        "command": "flutter-toolbox.pubGet",
         "title": "Flutter: Pub Get",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "flutter-build-utils.cleanAndPubGet",
+        "command": "flutter-toolbox.cleanAndPubGet",
         "title": "Flutter: Clean & Pub Get",
         "icon": "$(sync)"
       },
       {
-        "command": "flutter-build-utils.podInstall",
+        "command": "flutter-toolbox.podInstall",
         "title": "Flutter: Pod Install",
         "icon": "$(package)"
       },
       {
-        "command": "flutter-build-utils.buildRunner",
+        "command": "flutter-toolbox.buildRunner",
         "title": "Flutter: Build Runner",
         "icon": "$(gear)"
       },
       {
-        "command": "flutter-build-utils.flutterAnalyze",
+        "command": "flutter-toolbox.flutterAnalyze",
         "title": "Flutter: Analyze",
         "icon": "$(search)"
       },
       {
-        "command": "flutter-build-utils.flutterFormat",
+        "command": "flutter-toolbox.flutterFormat",
         "title": "Flutter: Format",
         "icon": "$(symbol-color)"
       },
       {
-        "command": "flutter-build-utils.generateMcpConfig",
+        "command": "flutter-toolbox.generateMcpConfig",
         "title": "Flutter: Generate FyUI MCP Config",
         "icon": "$(json)"
       },
       {
-        "command": "flutter-build-utils.generateFyersLaunchConfig",
+        "command": "flutter-toolbox.generateFyersLaunchConfig",
         "title": "Flutter: Generate Fyers Launch Config",
         "icon": "$(debug-alt)"
       },
       {
-        "command": "flutter-build-utils.openRepository",
+        "command": "flutter-toolbox.openRepository",
         "title": "Git: Open Repository",
         "icon": "$(repo)"
       },
       {
-        "command": "flutter-build-utils.createPR",
+        "command": "flutter-toolbox.createPR",
         "title": "Git: Create Pull Request",
         "icon": "$(git-pull-request-create)"
       },
       {
-        "command": "flutter-build-utils.viewPR",
+        "command": "flutter-toolbox.viewPR",
         "title": "Git: View Pull Request",
         "icon": "$(git-pull-request)"
       },
       {
-        "command": "flutter-build-utils.openActions",
+        "command": "flutter-toolbox.openActions",
         "title": "Git: Open GitHub Actions",
         "icon": "$(pulse)"
       },
       {
-        "command": "flutter-build-utils.openCurrentFile",
+        "command": "flutter-toolbox.openCurrentFile",
         "title": "Git: Open Current File on GitHub",
         "icon": "$(file-code)"
       },
       {
-        "command": "flutter-build-utils.viewCurrentCommit",
+        "command": "flutter-toolbox.viewCurrentCommit",
         "title": "Git: View Current Commit",
         "icon": "$(git-commit)"
       },
       {
-        "command": "flutter-build-utils.copyCommitHash",
+        "command": "flutter-toolbox.copyCommitHash",
         "title": "Git: Copy Commit Hash",
         "icon": "$(clippy)"
       },
       {
-        "command": "flutter-build-utils.generateFreezedCubitState",
+        "command": "flutter-toolbox.generateFreezedCubitState",
         "title": "Flutter: Generate Freezed Cubit/Bloc State",
         "icon": "$(symbol-class)"
       },
       {
-        "command": "flutter-build-utils.generateFreezedApiState",
+        "command": "flutter-toolbox.generateFreezedApiState",
         "title": "Flutter: Generate Freezed API State",
         "icon": "$(symbol-interface)"
       },
       {
-        "command": "flutter-build-utils.generateFreezedUiState",
+        "command": "flutter-toolbox.generateFreezedUiState",
         "title": "Flutter: Generate Freezed UI State",
         "icon": "$(symbol-struct)"
       },
       {
-        "command": "flutter-build-utils.generateFreezedModel",
+        "command": "flutter-toolbox.generateFreezedModel",
         "title": "Flutter: Generate Freezed Model",
         "icon": "$(symbol-property)"
       },
       {
-        "command": "flutter-build-utils.addFlutterCursorRules",
+        "command": "flutter-toolbox.addFlutterCursorRules",
         "title": "Flutter: Add Cursor Rules to Project",
         "icon": "$(files)"
       },
       {
-        "command": "flutter-build-utils.gitPush",
+        "command": "flutter-toolbox.gitPush",
         "title": "Git: Push to Branch",
         "icon": "$(arrow-up)"
       },
       {
-        "command": "flutter-build-utils.gitPull",
+        "command": "flutter-toolbox.gitPull",
         "title": "Git: Pull from Branch",
         "icon": "$(arrow-down)"
       },
       {
-        "command": "flutter-build-utils.gitCommit",
+        "command": "flutter-toolbox.gitCommit",
         "title": "Git: Commit with Type",
         "icon": "$(git-commit)"
       }
@@ -194,13 +194,13 @@
     "menus": {
       "view/title": [
         {
-          "command": "flutter-build-utils.refreshView",
-          "when": "view == flutterBuildUtilsView",
+          "command": "flutter-toolbox.refreshView",
+          "when": "view == flutterToolboxView",
           "group": "navigation"
         },
         {
-          "command": "flutter-build-utils.clearSessions",
-          "when": "view == flutterBuildUtilsView",
+          "command": "flutter-toolbox.clearSessions",
+          "when": "view == flutterToolboxView",
           "group": "navigation"
         }
       ]
@@ -208,7 +208,7 @@
     "configuration": {
       "title": "flutter-toolbox",
       "properties": {
-        "flutterBuildUtils.flutterCommand": {
+        "flutterToolbox.flutterCommand": {
           "type": "string",
           "default": "fvm flutter",
           "description": "Flutter command prefix (e.g., 'fvm flutter', 'flutter', or custom)",
@@ -221,7 +221,7 @@
             "Use system Flutter"
           ]
         },
-        "flutterBuildUtils.customFlutterCommand": {
+        "flutterToolbox.customFlutterCommand": {
           "type": "string",
           "default": "",
           "description": "Custom Flutter command prefix (leave empty to use the selection above)"

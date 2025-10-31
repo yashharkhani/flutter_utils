@@ -150,7 +150,7 @@ This creates a `.vsix` file that can be:
 ### Install VSIX Locally
 
 ```bash
-code --install-extension flutter-build-utils-0.0.1.vsix
+code --install-extension flutter-toolbox-0.0.1.vsix
 ```
 
 Or in VS Code:

@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize tree view provider first
     treeDataProvider = new BuildTreeProvider();
     const treeView = vscode.window.registerTreeDataProvider(
-        'flutterBuildUtilsView',
+        'flutterToolboxView',
         treeDataProvider
     );
 
@@ -38,27 +38,27 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register commands
     const buildApkCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.buildApk',
+        'flutter-toolbox.buildApk',
         () => handleBuild(BuildType.APK)
     );
 
     const buildIpaCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.buildIpa',
+        'flutter-toolbox.buildIpa',
         () => handleBuild(BuildType.IPA)
     );
 
     const buildWebCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.buildWeb',
+        'flutter-toolbox.buildWeb',
         () => handleBuild(BuildType.Web)
     );
 
     const refreshViewCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.refreshView',
+        'flutter-toolbox.refreshView',
         () => treeDataProvider.refresh()
     );
 
     const clearSessionsCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.clearSessions',
+        'flutter-toolbox.clearSessions',
         () => {
             treeDataProvider.clearSessions();
             vscode.window.showInformationMessage('Build history cleared');
@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     const openOutputFolderCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.openOutputFolder',
+        'flutter-toolbox.openOutputFolder',
         (item: BuildTreeItem) => {
             if (item && item.folderPath) {
                 openFolderInFinder(item.folderPath);
@@ -76,130 +76,130 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Utility commands
     const flutterVersionCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.flutterVersion',
+        'flutter-toolbox.flutterVersion',
         () => handleUtilityCommand('flutterVersion')
     );
 
     const cleanCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.clean',
+        'flutter-toolbox.clean',
         () => handleUtilityCommand('clean')
     );
 
     const pubGetCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.pubGet',
+        'flutter-toolbox.pubGet',
         () => handleUtilityCommand('pubGet')
     );
 
     const cleanAndPubGetCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.cleanAndPubGet',
+        'flutter-toolbox.cleanAndPubGet',
         () => handleUtilityCommand('cleanAndPubGet')
     );
 
     const podInstallCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.podInstall',
+        'flutter-toolbox.podInstall',
         () => handleUtilityCommand('podInstall')
     );
 
     const buildRunnerCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.buildRunner',
+        'flutter-toolbox.buildRunner',
         () => handleUtilityCommand('buildRunner')
     );
 
     const flutterAnalyzeCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.flutterAnalyze',
+        'flutter-toolbox.flutterAnalyze',
         () => handleUtilityCommand('flutterAnalyze')
     );
 
     const flutterFormatCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.flutterFormat',
+        'flutter-toolbox.flutterFormat',
         () => handleUtilityCommand('flutterFormat')
     );
 
     // MCP commands
     const generateMcpConfigCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.generateMcpConfig',
+        'flutter-toolbox.generateMcpConfig',
         () => handleGenerateMcpConfig()
     );
 
     const generateFyersLaunchConfigCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.generateFyersLaunchConfig',
+        'flutter-toolbox.generateFyersLaunchConfig',
         () => handleGenerateFyersLaunchConfig()
     );
 
     // Git action commands
     const openRepositoryCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.openRepository',
+        'flutter-toolbox.openRepository',
         () => handleGitAction('openRepo')
     );
 
     const createPRCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.createPR',
+        'flutter-toolbox.createPR',
         () => handleGitAction('createPR')
     );
 
     const viewPRCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.viewPR',
+        'flutter-toolbox.viewPR',
         () => handleGitAction('viewPR')
     );
 
     const openActionsCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.openActions',
+        'flutter-toolbox.openActions',
         () => handleGitAction('openActions')
     );
 
     const openCurrentFileCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.openCurrentFile',
+        'flutter-toolbox.openCurrentFile',
         () => handleGitAction('openCurrentFile')
     );
 
     const viewCurrentCommitCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.viewCurrentCommit',
+        'flutter-toolbox.viewCurrentCommit',
         () => handleGitAction('viewCurrentCommit')
     );
 
     const copyCommitHashCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.copyCommitHash',
+        'flutter-toolbox.copyCommitHash',
         () => handleGitAction('copyCommitHash')
     );
 
     // Code generation commands
     const generateFreezedCubitStateCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.generateFreezedCubitState',
+        'flutter-toolbox.generateFreezedCubitState',
         () => generateFreezedCubitState()
     );
 
     const generateFreezedApiStateCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.generateFreezedApiState',
+        'flutter-toolbox.generateFreezedApiState',
         () => generateFreezedApiState()
     );
 
     const generateFreezedUiStateCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.generateFreezedUiState',
+        'flutter-toolbox.generateFreezedUiState',
         () => generateFreezedUiState()
     );
 
     const generateFreezedModelCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.generateFreezedModel',
+        'flutter-toolbox.generateFreezedModel',
         () => generateFreezedModel()
     );
 
     const addFlutterCursorRulesCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.addFlutterCursorRules',
+        'flutter-toolbox.addFlutterCursorRules',
         () => handleAddFlutterCursorRules(context)
     );
 
     const gitPushCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.gitPush',
+        'flutter-toolbox.gitPush',
         () => handleGitCommand('push')
     );
 
     const gitPullCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.gitPull',
+        'flutter-toolbox.gitPull',
         () => handleGitCommand('pull')
     );
 
     const gitCommitCommand = vscode.commands.registerCommand(
-        'flutter-build-utils.gitCommit',
+        'flutter-toolbox.gitCommit',
         () => handleGitCommit()
     );
 
@@ -374,7 +374,7 @@ async function getWorkspaceFolder(): Promise<string | undefined> {
  * Get Flutter command from settings
  */
 function getFlutterCommand(): string {
-    const config = vscode.workspace.getConfiguration('flutterBuildUtils');
+    const config = vscode.workspace.getConfiguration('flutterToolbox');
     const customCommand = config.get<string>('customFlutterCommand', '').trim();
 
     if (customCommand) {

@@ -454,8 +454,8 @@ Configure the extension in VS Code settings:
 
 ```json
 {
-  "flutterBuildUtils.flutterCommand": "fvm flutter",  // or "flutter"
-  "flutterBuildUtils.customFlutterCommand": ""        // custom command prefix
+  "flutterToolbox.flutterCommand": "fvm flutter",  // or "flutter"
+  "flutterToolbox.customFlutterCommand": ""        // custom command prefix
 }
 ```
 
@@ -463,8 +463,8 @@ Configure the extension in VS Code settings:
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `flutterBuildUtils.flutterCommand` | Flutter command prefix | `fvm flutter` |
-| `flutterBuildUtils.customFlutterCommand` | Custom Flutter command (overrides above) | `""` |
+| `flutterToolbox.flutterCommand` | Flutter command prefix | `fvm flutter` |
+| `flutterToolbox.customFlutterCommand` | Custom Flutter command (overrides above) | `""` |
 
 ### Customizing Build Commands
 
@@ -536,44 +536,44 @@ If a step fails:
 This extension contributes the following commands:
 
 **Build Commands:**
-- `flutter-build-utils.buildApk` - Build Android APK
-- `flutter-build-utils.buildIpa` - Build iOS IPA
-- `flutter-build-utils.buildWeb` - Build Web with base-href
+- `flutter-toolbox.buildApk` - Build Android APK
+- `flutter-toolbox.buildIpa` - Build iOS IPA
+- `flutter-toolbox.buildWeb` - Build Web with base-href
 
 **Utility Commands:**
-- `flutter-build-utils.flutterVersion` - Check Flutter version
-- `flutter-build-utils.buildRunner` - Generate code with build_runner
-- `flutter-build-utils.flutterAnalyze` - Analyze Dart code
-- `flutter-build-utils.flutterFormat` - Format Dart code
-- `flutter-build-utils.clean` - Run flutter clean
-- `flutter-build-utils.pubGet` - Run flutter pub get
-- `flutter-build-utils.cleanAndPubGet` - Clean & Pub Get with optional pubspec.lock deletion
-- `flutter-build-utils.podInstall` - Clean and reinstall iOS CocoaPods dependencies
+- `flutter-toolbox.flutterVersion` - Check Flutter version
+- `flutter-toolbox.buildRunner` - Generate code with build_runner
+- `flutter-toolbox.flutterAnalyze` - Analyze Dart code
+- `flutter-toolbox.flutterFormat` - Format Dart code
+- `flutter-toolbox.clean` - Run flutter clean
+- `flutter-toolbox.pubGet` - Run flutter pub get
+- `flutter-toolbox.cleanAndPubGet` - Clean & Pub Get with optional pubspec.lock deletion
+- `flutter-toolbox.podInstall` - Clean and reinstall iOS CocoaPods dependencies
 
 **Environment Setup Commands:**
-- `flutter-build-utils.generateMcpConfig` - Generate FyUI MCP configuration
-- `flutter-build-utils.generateFyersLaunchConfig` - Generate Fyers App launch configurations
-- `flutter-build-utils.addFlutterCursorRules` - Add Flutter cursor rules to project
+- `flutter-toolbox.generateMcpConfig` - Generate FyUI MCP configuration
+- `flutter-toolbox.generateFyersLaunchConfig` - Generate Fyers App launch configurations
+- `flutter-toolbox.addFlutterCursorRules` - Add Flutter cursor rules to project
 
 **Git Action Commands:**
-- `flutter-build-utils.openRepository` - Open GitHub repository in browser
-- `flutter-build-utils.openCurrentFile` - Open current file on GitHub with line number
-- `flutter-build-utils.viewCurrentCommit` - View current commit on GitHub
-- `flutter-build-utils.copyCommitHash` - Copy commit hash to clipboard
-- `flutter-build-utils.createPR` - Create pull request
-- `flutter-build-utils.viewPR` - View pull requests for current branch
-- `flutter-build-utils.openActions` - Open GitHub Actions
+- `flutter-toolbox.openRepository` - Open GitHub repository in browser
+- `flutter-toolbox.openCurrentFile` - Open current file on GitHub with line number
+- `flutter-toolbox.viewCurrentCommit` - View current commit on GitHub
+- `flutter-toolbox.copyCommitHash` - Copy commit hash to clipboard
+- `flutter-toolbox.createPR` - Create pull request
+- `flutter-toolbox.viewPR` - View pull requests for current branch
+- `flutter-toolbox.openActions` - Open GitHub Actions
 
 **Code Generation Commands:**
-- `flutter-build-utils.generateFreezedCubitState` - Generate freezed Cubit/Bloc state boilerplate
-- `flutter-build-utils.generateFreezedApiState` - Generate freezed API state boilerplate
-- `flutter-build-utils.generateFreezedUiState` - Generate freezed UI state boilerplate
-- `flutter-build-utils.generateFreezedModel` - Generate freezed model boilerplate
+- `flutter-toolbox.generateFreezedCubitState` - Generate freezed Cubit/Bloc state boilerplate
+- `flutter-toolbox.generateFreezedApiState` - Generate freezed API state boilerplate
+- `flutter-toolbox.generateFreezedUiState` - Generate freezed UI state boilerplate
+- `flutter-toolbox.generateFreezedModel` - Generate freezed model boilerplate
 
 **Other Commands:**
-- `flutter-build-utils.refreshView` - Refresh sidebar view
-- `flutter-build-utils.clearSessions` - Clear build history
-- `flutter-build-utils.openOutputFolder` - Open build output folder in Finder/Explorer
+- `flutter-toolbox.refreshView` - Refresh sidebar view
+- `flutter-toolbox.clearSessions` - Clear build history
+- `flutter-toolbox.openOutputFolder` - Open build output folder in Finder/Explorer
 
 ## Output and Logs
 
@@ -638,7 +638,7 @@ This will:
 - Package into VSIX with all validations
 - Show detailed build summary
 
-The generated `flutter-build-utils-0.0.1.vsix` can be installed or shared with others.
+The generated `flutter-toolbox-0.0.1.vsix` can be installed or shared with others.
 
 ### Project Structure
 

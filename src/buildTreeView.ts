@@ -156,7 +156,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'buildAction',
                 new vscode.ThemeIcon('device-mobile', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.buildApk'
+                'flutter-toolbox.buildApk'
             ),
             new BuildTreeItem(
                 '  Build IPA',
@@ -164,7 +164,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'buildAction',
                 new vscode.ThemeIcon('device-mobile', new vscode.ThemeColor('charts.blue')),
-                'flutter-build-utils.buildIpa'
+                'flutter-toolbox.buildIpa'
             ),
             new BuildTreeItem(
                 '  Build Web',
@@ -172,7 +172,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'buildAction',
                 new vscode.ThemeIcon('globe', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.buildWeb'
+                'flutter-toolbox.buildWeb'
             )
         );
 
@@ -202,7 +202,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('info', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.flutterVersion'
+                'flutter-toolbox.flutterVersion'
             ),
             new BuildTreeItem(
                 '  Build Runner',
@@ -210,7 +210,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('gear', new vscode.ThemeColor('charts.yellow')),
-                'flutter-build-utils.buildRunner'
+                'flutter-toolbox.buildRunner'
             ),
             new BuildTreeItem(
                 '  Analyze',
@@ -218,7 +218,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('search', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.flutterAnalyze'
+                'flutter-toolbox.flutterAnalyze'
             ),
             new BuildTreeItem(
                 '  Format',
@@ -226,7 +226,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('symbol-color', new vscode.ThemeColor('charts.pink')),
-                'flutter-build-utils.flutterFormat'
+                'flutter-toolbox.flutterFormat'
             ),
             new BuildTreeItem(
                 '  Clean',
@@ -234,7 +234,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('trash', new vscode.ThemeColor('charts.orange')),
-                'flutter-build-utils.clean'
+                'flutter-toolbox.clean'
             ),
             new BuildTreeItem(
                 '  Pub Get',
@@ -242,7 +242,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('cloud-download', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.pubGet'
+                'flutter-toolbox.pubGet'
             ),
             new BuildTreeItem(
                 '  Clean & Pub Get',
@@ -250,7 +250,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('sync', new vscode.ThemeColor('charts.blue')),
-                'flutter-build-utils.cleanAndPubGet'
+                'flutter-toolbox.cleanAndPubGet'
             ),
             new BuildTreeItem(
                 '  Pod Install',
@@ -258,7 +258,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'utilAction',
                 new vscode.ThemeIcon('package', new vscode.ThemeColor('charts.red')),
-                'flutter-build-utils.podInstall'
+                'flutter-toolbox.podInstall'
             )
         );
 
@@ -288,7 +288,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'mcpAction',
                 new vscode.ThemeIcon('json', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.generateMcpConfig'
+                'flutter-toolbox.generateMcpConfig'
             ),
             new BuildTreeItem(
                 '  Generate Fyers Launch Config',
@@ -296,7 +296,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'mcpAction',
                 new vscode.ThemeIcon('debug-alt', new vscode.ThemeColor('charts.blue')),
-                'flutter-build-utils.generateFyersLaunchConfig'
+                'flutter-toolbox.generateFyersLaunchConfig'
             ),
             new BuildTreeItem(
                 '  Add Flutter Cursor Rules',
@@ -304,7 +304,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'mcpAction',
                 new vscode.ThemeIcon('files', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.addFlutterCursorRules'
+                'flutter-toolbox.addFlutterCursorRules'
             )
         );
 
@@ -334,7 +334,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'codeGenAction',
                 new vscode.ThemeIcon('symbol-class', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.generateFreezedCubitState'
+                'flutter-toolbox.generateFreezedCubitState'
             ),
             new BuildTreeItem(
                 '  Generate Freezed API State',
@@ -342,7 +342,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'codeGenAction',
                 new vscode.ThemeIcon('symbol-interface', new vscode.ThemeColor('charts.blue')),
-                'flutter-build-utils.generateFreezedApiState'
+                'flutter-toolbox.generateFreezedApiState'
             ),
             new BuildTreeItem(
                 '  Generate Freezed UI State',
@@ -350,7 +350,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'codeGenAction',
                 new vscode.ThemeIcon('symbol-struct', new vscode.ThemeColor('charts.cyan')),
-                'flutter-build-utils.generateFreezedUiState'
+                'flutter-toolbox.generateFreezedUiState'
             ),
             new BuildTreeItem(
                 '  Generate Freezed Model',
@@ -358,7 +358,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'codeGenAction',
                 new vscode.ThemeIcon('symbol-property', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.generateFreezedModel'
+                'flutter-toolbox.generateFreezedModel'
             )
         );
 
@@ -388,7 +388,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('arrow-up', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.gitPush'
+                'flutter-toolbox.gitPush'
             ),
             new BuildTreeItem(
                 '  Git Pull',
@@ -396,7 +396,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('arrow-down', new vscode.ThemeColor('charts.blue')),
-                'flutter-build-utils.gitPull'
+                'flutter-toolbox.gitPull'
             ),
             new BuildTreeItem(
                 '  Git Commit',
@@ -404,7 +404,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('git-commit', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.gitCommit'
+                'flutter-toolbox.gitCommit'
             ),
             new BuildTreeItem(
                 '  Open Repository',
@@ -412,7 +412,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('repo', new vscode.ThemeColor('charts.blue')),
-                'flutter-build-utils.openRepository'
+                'flutter-toolbox.openRepository'
             ),
             new BuildTreeItem(
                 '  Open Current File',
@@ -420,7 +420,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('file-code', new vscode.ThemeColor('charts.cyan')),
-                'flutter-build-utils.openCurrentFile'
+                'flutter-toolbox.openCurrentFile'
             ),
             new BuildTreeItem(
                 '  View Current Commit',
@@ -428,7 +428,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('git-commit', new vscode.ThemeColor('charts.yellow')),
-                'flutter-build-utils.viewCurrentCommit'
+                'flutter-toolbox.viewCurrentCommit'
             ),
             new BuildTreeItem(
                 '  Copy Commit Hash',
@@ -436,7 +436,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('clippy', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.copyCommitHash'
+                'flutter-toolbox.copyCommitHash'
             ),
             new BuildTreeItem(
                 '  Create PR',
@@ -444,7 +444,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('git-pull-request-create', new vscode.ThemeColor('charts.green')),
-                'flutter-build-utils.createPR'
+                'flutter-toolbox.createPR'
             ),
             new BuildTreeItem(
                 '  View PR',
@@ -452,7 +452,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('git-pull-request', new vscode.ThemeColor('charts.purple')),
-                'flutter-build-utils.viewPR'
+                'flutter-toolbox.viewPR'
             ),
             new BuildTreeItem(
                 '  Open Actions',
@@ -460,7 +460,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 vscode.TreeItemCollapsibleState.None,
                 'gitAction',
                 new vscode.ThemeIcon('pulse', new vscode.ThemeColor('charts.orange')),
-                'flutter-build-utils.openActions'
+                'flutter-toolbox.openActions'
             )
         );
 
@@ -602,7 +602,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             vscode.TreeItemCollapsibleState.None,
             'openFolder',
             new vscode.ThemeIcon('folder-opened', new vscode.ThemeColor('charts.blue')),
-            'flutter-build-utils.openOutputFolder'
+            'flutter-toolbox.openOutputFolder'
         );
 
         item.folderPath = fullPath;
