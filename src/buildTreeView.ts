@@ -305,6 +305,14 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'mcpAction',
                 new vscode.ThemeIcon('files', new vscode.ThemeColor('charts.green')),
                 'flutter-toolbox.addFlutterCursorRules'
+            ),
+            new BuildTreeItem(
+                '  Setup Git-AI',
+                'Install and configure git-ai for Cursor',
+                vscode.TreeItemCollapsibleState.None,
+                'mcpAction',
+                new vscode.ThemeIcon('terminal', new vscode.ThemeColor('charts.orange')),
+                'flutter-toolbox.setupGitAI'
             )
         );
 

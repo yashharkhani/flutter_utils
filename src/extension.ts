@@ -188,6 +188,11 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleAddFlutterCursorRules(context)
     );
 
+    const setupGitAICommand = vscode.commands.registerCommand(
+        'flutter-toolbox.setupGitAI',
+        () => handleSetupGitAI(context)
+    );
+
     const gitPushCommand = vscode.commands.registerCommand(
         'flutter-toolbox.gitPush',
         () => handleGitCommand('push')
@@ -232,6 +237,7 @@ export function activate(context: vscode.ExtensionContext) {
         generateFreezedUiStateCommand,
         generateFreezedModelCommand,
         addFlutterCursorRulesCommand,
+        setupGitAICommand,
         gitPushCommand,
         gitPullCommand,
         gitCommitCommand,
@@ -1163,6 +1169,118 @@ async function handleGitCommit(): Promise<void> {
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Git commit error: ${error.message}`);
+    }
+}
+
+/**
+ * Handle Setup Git-AI
+ */
+async function handleSetupGitAI(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        // Check if on macOS
+        const platform = process.platform;
+        if (platform !== 'darwin') {
+            vscode.window.showErrorMessage('Git-AI setup is currently only supported on macOS.');
+            return;
+        }
+
+        // Get the script path from extension resources
+        const scriptPath = path.join(context.extensionPath, 'resources', 'git_ai_setup.sh');
+
+        // Check if script exists
+        if (!fs.existsSync(scriptPath)) {
+            vscode.window.showErrorMessage('Git-AI setup script not found in extension resources.');
+            return;
+        }
+
+        // Show confirmation dialog
+        const proceed = await vscode.window.showWarningMessage(
+            'This will install git-ai and configure Cursor to use it. The script requires:\n\n' +
+            '• Homebrew (will be checked)\n• Internet connection\n• Administrator permissions may be needed\n\n' +
+            'Continue?',
+            { modal: true },
+            'Install Git-AI',
+            'Cancel'
+        );
+
+        if (proceed !== 'Install Git-AI') {
+            return;
+        }
+
+        // Show output channel
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
+        outputChannel.clear();
+        outputChannel.show(true);
+
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Git-AI Setup Starting...');
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.appendLine(`Script Path: ${scriptPath}\n`);
+
+        // Execute the shell script
+        const exec = require('child_process').exec;
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+
+        vscode.window.showInformationMessage('Installing Git-AI... Check output panel for progress.');
+
+        try {
+            // Make script executable
+            await execAsync(`chmod +x "${scriptPath}"`);
+
+            // Execute the script
+            const { stdout, stderr } = await execAsync(`bash "${scriptPath}"`, {
+                maxBuffer: 10 * 1024 * 1024 // 10MB buffer
+            });
+
+            if (stdout) {
+                outputChannel.appendLine(stdout);
+            }
+
+            if (stderr && stderr.trim()) {
+                outputChannel.appendLine('\nWarnings/Additional Info:');
+                outputChannel.appendLine(stderr);
+            }
+
+            outputChannel.appendLine('\n' + '='.repeat(60));
+            outputChannel.appendLine('✅ Git-AI Setup Completed Successfully!');
+            outputChannel.appendLine('='.repeat(60) + '\n');
+            outputChannel.appendLine('Next steps:');
+            outputChannel.appendLine('1. Restart Cursor for the settings to take effect');
+            outputChannel.appendLine('2. Verify git-ai is working by running: git-ai --version\n');
+
+            // Show success message with actions
+            const choice = await vscode.window.showInformationMessage(
+                'Git-AI setup completed successfully! Please restart Cursor for changes to take effect.',
+                'Restart Cursor',
+                'Later'
+            );
+
+            if (choice === 'Restart Cursor') {
+                // Reload VS Code window
+                vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+
+        } catch (error: any) {
+            outputChannel.appendLine('\n❌ Error during Git-AI setup');
+            if (error.stdout) {
+                outputChannel.appendLine('\nOutput:');
+                outputChannel.appendLine(error.stdout);
+            }
+            if (error.stderr) {
+                outputChannel.appendLine('\nError Details:');
+                outputChannel.appendLine(error.stderr);
+            }
+            if (error.message) {
+                outputChannel.appendLine('\nError Message:');
+                outputChannel.appendLine(error.message);
+            }
+
+            vscode.window.showErrorMessage('Git-AI setup failed. Check output panel for details.');
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Git-AI setup error: ${error.message}`);
     }
 }
 

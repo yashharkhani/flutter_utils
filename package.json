@@ -176,6 +176,11 @@
         "icon": "$(files)"
       },
       {
+        "command": "flutter-toolbox.setupGitAI",
+        "title": "Flutter: Setup Git-AI",
+        "icon": "$(terminal)"
+      },
+      {
         "command": "flutter-toolbox.gitPush",
         "title": "Git: Push to Branch",
         "icon": "$(arrow-up)"
