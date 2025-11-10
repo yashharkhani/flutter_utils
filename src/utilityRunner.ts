@@ -331,7 +331,7 @@ export class UtilityRunner {
     /**
      * Execute utility with session tracking
      */
-    private async executeUtilityWithSession(
+    async executeUtilityWithSession(
         workspaceFolder: string,
         flutterCommand: string,
         utilityName: string,

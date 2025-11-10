@@ -230,6 +230,98 @@
           "type": "string",
           "default": "",
           "description": "Custom Flutter command prefix (leave empty to use the selection above)"
+        },
+        "flutterToolbox.customCommands": {
+          "type": "array",
+          "default": [],
+          "description": "Workspace-specific custom commands",
+          "scope": "resource",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the command"
+              },
+              "name": {
+                "type": "string",
+                "description": "Display name of the command"
+              },
+              "description": {
+                "type": "string",
+                "description": "Brief description of what the command does"
+              },
+              "command": {
+                "type": "string",
+                "description": "The actual command to execute"
+              },
+              "workingDirectory": {
+                "type": "string",
+                "description": "Optional working directory (defaults to workspace root)"
+              },
+              "requiresConfirmation": {
+                "type": "boolean",
+                "description": "Whether to ask for confirmation before running"
+              },
+              "scope": {
+                "type": "string",
+                "enum": ["global", "workspace"],
+                "description": "Scope of the command (global or workspace)"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "description",
+              "command"
+            ]
+          }
+        },
+        "flutterToolbox.globalCustomCommands": {
+          "type": "array",
+          "default": [],
+          "description": "Global custom commands available in all workspaces",
+          "scope": "application",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the command"
+              },
+              "name": {
+                "type": "string",
+                "description": "Display name of the command"
+              },
+              "description": {
+                "type": "string",
+                "description": "Brief description of what the command does"
+              },
+              "command": {
+                "type": "string",
+                "description": "The actual command to execute"
+              },
+              "workingDirectory": {
+                "type": "string",
+                "description": "Optional working directory (defaults to workspace root)"
+              },
+              "requiresConfirmation": {
+                "type": "boolean",
+                "description": "Whether to ask for confirmation before running"
+              },
+              "scope": {
+                "type": "string",
+                "enum": ["global", "workspace"],
+                "description": "Scope of the command (global or workspace)"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "description",
+              "command"
+            ]
+          }
         }
       }
     }

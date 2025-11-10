@@ -15,7 +15,7 @@ import {
     generateFreezedModel,
     generateFreezedUiState
 } from './codeGenerator';
-import { BuildType } from './types';
+import { BuildType, CustomCommand } from './types';
 import { UtilityRunner } from './utilityRunner';
 
 let buildRunner: BuildRunner;
@@ -213,6 +213,27 @@ export function activate(context: vscode.ExtensionContext) {
         (item: BuildTreeItem) => handleShowErrorInEditor(item)
     );
 
+    // Custom command commands
+    const addCustomCommandCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.addCustomCommand',
+        () => handleAddCustomCommand()
+    );
+
+    const editCustomCommandCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.editCustomCommand',
+        (item: BuildTreeItem) => handleEditCustomCommand(item)
+    );
+
+    const deleteCustomCommandCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.deleteCustomCommand',
+        (item: BuildTreeItem) => handleDeleteCustomCommand(item)
+    );
+
+    const runCustomCommandCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.runCustomCommand',
+        (item: BuildTreeItem) => handleRunCustomCommand(item)
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -247,6 +268,10 @@ export function activate(context: vscode.ExtensionContext) {
         gitPullCommand,
         gitCommitCommand,
         showErrorInEditorCommand,
+        addCustomCommandCommand,
+        editCustomCommandCommand,
+        deleteCustomCommandCommand,
+        runCustomCommandCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -1410,6 +1435,352 @@ async function handleShowErrorInEditor(item: BuildTreeItem): Promise<void> {
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Failed to show error: ${error.message}`);
+    }
+}
+
+/**
+ * Handle adding a new custom command
+ */
+async function handleAddCustomCommand(): Promise<void> {
+    try {
+        // Get command name
+        const name = await vscode.window.showInputBox({
+            prompt: 'Enter a name for this command',
+            placeHolder: 'e.g., Run Tests, Deploy to Staging',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Command name cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!name) {
+            return; // User cancelled
+        }
+
+        // Get description
+        const description = await vscode.window.showInputBox({
+            prompt: 'Enter a description for this command',
+            placeHolder: 'e.g., Run all unit tests',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Description cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!description) {
+            return; // User cancelled
+        }
+
+        // Get command
+        const command = await vscode.window.showInputBox({
+            prompt: 'Enter the command to execute',
+            placeHolder: 'e.g., flutter test, npm run deploy',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Command cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!command) {
+            return; // User cancelled
+        }
+
+        // Ask if requires confirmation
+        const confirmChoice = await vscode.window.showQuickPick(
+            [
+                { label: 'No', description: 'Run immediately without confirmation', value: false },
+                { label: 'Yes', description: 'Ask for confirmation before running', value: true }
+            ],
+            {
+                placeHolder: 'Require confirmation before running?',
+                ignoreFocusOut: true
+            }
+        );
+
+        if (confirmChoice === undefined) {
+            return; // User cancelled
+        }
+
+        // Ask for scope (global or workspace)
+        const scopeChoice = await vscode.window.showQuickPick(
+            [
+                {
+                    label: '🌍 Global',
+                    description: 'Available in all projects',
+                    value: 'global' as const
+                },
+                {
+                    label: '📁 Workspace',
+                    description: 'Only for this project',
+                    value: 'workspace' as const
+                }
+            ],
+            {
+                placeHolder: 'Where should this command be available?',
+                ignoreFocusOut: true
+            }
+        );
+
+        if (scopeChoice === undefined) {
+            return; // User cancelled
+        }
+
+        // Create the custom command
+        const customCommand: CustomCommand = {
+            id: `custom-${Date.now()}`,
+            name: name.trim(),
+            description: description.trim(),
+            command: command.trim(),
+            requiresConfirmation: confirmChoice.value,
+            scope: scopeChoice.value
+        };
+
+        // Add to tree provider
+        await treeDataProvider.addCustomCommand(customCommand);
+
+        const scopeText = scopeChoice.value === 'global' ? 'globally' : 'to this workspace';
+        vscode.window.showInformationMessage(`Custom command "${name}" added ${scopeText}!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to add custom command: ${error.message}`);
+    }
+}
+
+/**
+ * Handle editing a custom command
+ */
+async function handleEditCustomCommand(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.customCommandId) {
+            vscode.window.showWarningMessage('No custom command ID found.');
+            return;
+        }
+
+        const existingCommand = treeDataProvider.getCustomCommand(item.customCommandId);
+        if (!existingCommand) {
+            vscode.window.showWarningMessage('Custom command not found.');
+            return;
+        }
+
+        // Get new name
+        const name = await vscode.window.showInputBox({
+            prompt: 'Enter a name for this command',
+            placeHolder: 'e.g., Run Tests, Deploy to Staging',
+            value: existingCommand.name,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Command name cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!name) {
+            return; // User cancelled
+        }
+
+        // Get new description
+        const description = await vscode.window.showInputBox({
+            prompt: 'Enter a description for this command',
+            placeHolder: 'e.g., Run all unit tests',
+            value: existingCommand.description,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Description cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!description) {
+            return; // User cancelled
+        }
+
+        // Get new command
+        const command = await vscode.window.showInputBox({
+            prompt: 'Enter the command to execute',
+            placeHolder: 'e.g., flutter test, npm run deploy',
+            value: existingCommand.command,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Command cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!command) {
+            return; // User cancelled
+        }
+
+        // Ask if requires confirmation
+        const confirmChoice = await vscode.window.showQuickPick(
+            [
+                { label: 'No', description: 'Run immediately without confirmation', value: false },
+                { label: 'Yes', description: 'Ask for confirmation before running', value: true }
+            ],
+            {
+                placeHolder: 'Require confirmation before running?',
+                ignoreFocusOut: true
+            }
+        );
+
+        if (confirmChoice === undefined) {
+            return; // User cancelled
+        }
+
+        // Ask for scope (global or workspace)
+        const currentScope = existingCommand.scope || 'workspace';
+        const scopeChoice = await vscode.window.showQuickPick(
+            [
+                {
+                    label: '🌍 Global',
+                    description: currentScope === 'global' ? '(Current)' : 'Available in all projects',
+                    value: 'global' as const
+                },
+                {
+                    label: '📁 Workspace',
+                    description: currentScope === 'workspace' ? '(Current)' : 'Only for this project',
+                    value: 'workspace' as const
+                }
+            ],
+            {
+                placeHolder: 'Where should this command be available?',
+                ignoreFocusOut: true
+            }
+        );
+
+        if (scopeChoice === undefined) {
+            return; // User cancelled
+        }
+
+        // Update the custom command
+        await treeDataProvider.updateCustomCommand(item.customCommandId, {
+            name: name.trim(),
+            description: description.trim(),
+            command: command.trim(),
+            requiresConfirmation: confirmChoice.value,
+            scope: scopeChoice.value
+        });
+
+        const scopeText = scopeChoice.value === 'global' ? 'globally' : 'in this workspace';
+        vscode.window.showInformationMessage(`Custom command "${name}" updated and saved ${scopeText}!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to edit custom command: ${error.message}`);
+    }
+}
+
+/**
+ * Handle deleting a custom command
+ */
+async function handleDeleteCustomCommand(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.customCommandId) {
+            vscode.window.showWarningMessage('No custom command ID found.');
+            return;
+        }
+
+        const existingCommand = treeDataProvider.getCustomCommand(item.customCommandId);
+        if (!existingCommand) {
+            vscode.window.showWarningMessage('Custom command not found.');
+            return;
+        }
+
+        // Confirm deletion
+        const confirm = await vscode.window.showWarningMessage(
+            `Are you sure you want to delete the command "${existingCommand.name}"?`,
+            { modal: true },
+            'Delete',
+            'Cancel'
+        );
+
+        if (confirm !== 'Delete') {
+            return;
+        }
+
+        // Delete the custom command
+        await treeDataProvider.deleteCustomCommand(item.customCommandId);
+
+        vscode.window.showInformationMessage(`Custom command "${existingCommand.name}" deleted successfully!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to delete custom command: ${error.message}`);
+    }
+}
+
+/**
+ * Handle running a custom command
+ */
+async function handleRunCustomCommand(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.customCommandId) {
+            vscode.window.showWarningMessage('No custom command ID found.');
+            return;
+        }
+
+        const customCommand = treeDataProvider.getCustomCommand(item.customCommandId);
+        if (!customCommand) {
+            vscode.window.showWarningMessage('Custom command not found.');
+            return;
+        }
+
+        // Get workspace folder
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found.');
+            return;
+        }
+
+        // Check if requires confirmation
+        if (customCommand.requiresConfirmation) {
+            const confirm = await vscode.window.showQuickPick(
+                [
+                    { label: 'Run', description: `Execute: ${customCommand.command}`, value: true },
+                    { label: 'Cancel', description: 'Cancel execution', value: false }
+                ],
+                {
+                    placeHolder: `Run custom command: ${customCommand.name}?`,
+                    ignoreFocusOut: true
+                }
+            );
+
+            if (!confirm || !confirm.value) {
+                return;
+            }
+        }
+
+        // Get Flutter command from settings
+        const flutterCommand = getFlutterCommand();
+
+        // Execute the custom command using utility runner
+        const steps = [{
+            id: 'custom-command',
+            description: customCommand.name,
+            command: customCommand.command
+        }];
+
+        await utilityRunner.executeUtilityWithSession(
+            customCommand.workingDirectory || workspaceFolder,
+            flutterCommand,
+            customCommand.name,
+            steps
+        );
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to run custom command: ${error.message}`);
     }
 }
 

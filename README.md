@@ -44,13 +44,23 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Generate Freezed UI State** - Generate boilerplate freezed code for UI state with customizable fields
 - **Generate Freezed Model** - Generate boilerplate freezed code for data models with optional JSON serialization
 
+### 🔧 Custom Commands
+
+- **Add Custom Commands** - Create your own reusable commands with a simple guided interface
+- **Global Commands** (🌍) - Available across all your projects
+- **Workspace Commands** (📁) - Project-specific commands that can be shared with your team
+- **Manage Commands** - Edit, delete, or run commands with expandable options
+- **Confirmation Support** - Optionally require confirmation before executing dangerous commands
+- **Session Tracking** - Custom commands run with full error handling and progress tracking
+
 ### ✨ Key Capabilities
 
 - **Sidebar UI** - Beautiful sidebar panel with clickable build commands
+- **Custom Commands** - Create your own reusable commands (global or workspace-specific)
 - **Real-time Status Tracking** - Watch each command execute with live status updates in sidebar
 - **Step-by-Step Progress** - See individual build steps with icons (waiting/running/success/failed)
 - **Build History** - Last 5 builds kept in sidebar with timing and status
-- **Error Accordion** - Expandable error details right in the sidebar
+- **Enhanced Error Display** - Expandable error details with "Click to view full error" in temporary editor
 - **Quick Access to Outputs** - One-click button to open build output folders in Finder/Explorer
 - **Configurable Flutter Command** - Use `fvm flutter`, `flutter`, or custom command prefix
 - **Smart Build Sequencing** - Automated clean, pub get, and build cycles for optimal results
@@ -61,6 +71,7 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
 - **Command Palette Integration** - Access builds via Command Palette or sidebar
 - **Cross-Platform** - Works on macOS, Windows, and Linux
 - **Git Integration** - Quick access to GitHub repository, PRs, and Actions
+- **Persistent Storage** - Custom commands stored globally or per-workspace with Git sharing support
 
 ## Usage
 
@@ -106,6 +117,11 @@ A powerful VS Code extension that streamlines Flutter build processes for APK, I
    - 🔧 **Generate Freezed API State** - Generate API state boilerplate
    - 🎨 **Generate Freezed UI State** - Generate UI state boilerplate
    - 📦 **Generate Freezed Model** - Generate data model boilerplate
+
+**Custom Commands Section:**
+   - ➕ **+ Add Custom Command** - Create a new custom command
+   - 🌍 **Your Global Commands** - Expand to run, edit, or delete
+   - 📁 **Your Workspace Commands** - Expand to run, edit, or delete
 
 4. Follow the prompts:
    - Choose whether to delete `pubspec.lock`
@@ -389,6 +405,59 @@ part 'user.freezed.dart';
 part 'user.g.dart';
 ```
 
+### Using Custom Commands
+
+Create and manage your own custom commands that run with the same robust execution system as built-in utilities.
+
+#### Adding a Custom Command
+
+1. Click **+ Add Custom Command** in the Custom Commands section
+2. Follow the guided prompts:
+   - **Name**: Enter a descriptive name (e.g., "Run Integration Tests")
+   - **Description**: Brief description of what it does (e.g., "Execute all integration tests")
+   - **Command**: The actual command to run (e.g., `flutter test integration_test/`)
+   - **Confirmation**: Choose if you want to confirm before running (Yes/No)
+   - **Scope**: Choose where the command should be available:
+     - **🌍 Global**: Available in all projects
+     - **📁 Workspace**: Only for this project
+
+#### Managing Custom Commands
+
+Custom commands appear in the sidebar with visual indicators:
+- **🌍** = Global command (available everywhere)
+- **📁** = Workspace command (only this project)
+
+Expand any custom command to see options:
+- **Run** - Execute the command
+- **Edit** - Modify command details
+- **Delete** - Remove the command (with confirmation)
+
+#### Example Custom Commands
+
+**Global Commands** (useful across all projects):
+```
+🌍 Run Tests           → flutter test
+🌍 Format Code         → dart format . -l 80
+🌍 Check Dependencies  → flutter pub outdated
+🌍 Update Deps         → flutter pub upgrade
+```
+
+**Workspace Commands** (project-specific):
+```
+📁 Deploy to Firebase   → firebase deploy
+📁 Generate Icons       → flutter pub run flutter_launcher_icons:main
+📁 Run on Chrome        → flutter run -d chrome --web-port=8080
+📁 Build & Deploy       → ./scripts/build_and_deploy.sh
+```
+
+#### Execution Features
+
+- **Session Tracking**: Custom commands run with full progress tracking in the timeline
+- **Error Handling**: Errors are displayed with expandable details (click to view full error)
+- **Output Logging**: View complete output in the flutter-toolbox output channel
+- **Status Updates**: Real-time status icons (waiting/running/success/failed)
+- **Confirmation**: Optionally require confirmation before running destructive commands
+
 #### Git Actions
 
 All git actions work with your current workspace git repository:
@@ -465,6 +534,122 @@ Configure the extension in VS Code settings:
 |---------|-------------|---------|
 | `flutterToolbox.flutterCommand` | Flutter command prefix | `fvm flutter` |
 | `flutterToolbox.customFlutterCommand` | Custom Flutter command (overrides above) | `""` |
+| `flutterToolbox.customCommands` | Workspace-specific custom commands | `[]` |
+| `flutterToolbox.globalCustomCommands` | Global custom commands (all projects) | `[]` |
+
+## Data Storage
+
+The extension stores data in different locations depending on the type and scope:
+
+### 📍 Custom Commands Storage
+
+#### Global Commands (🌍)
+
+**Location**: VS Code User Settings
+```
+macOS:    ~/Library/Application Support/Code/User/settings.json
+Windows:  %APPDATA%\Code\User\settings.json
+Linux:    ~/.config/Code/User/settings.json
+```
+
+**Stored as**:
+```json
+{
+  "flutterToolbox.globalCustomCommands": [
+    {
+      "id": "custom-1234567890",
+      "name": "Run Tests",
+      "description": "Execute all unit tests",
+      "command": "flutter test",
+      "scope": "global",
+      "requiresConfirmation": false
+    }
+  ]
+}
+```
+
+**Benefits**:
+- ✅ Available in ALL your projects
+- ✅ Survives VS Code restarts
+- ✅ Syncs across machines (if using VS Code Settings Sync)
+- ✅ Perfect for commands you use frequently across different projects
+
+**Use Cases**:
+- Common Flutter commands (`flutter test`, `flutter format`)
+- General development tools (`dart analyze`, `pub outdated`)
+- Personal workflow commands you use everywhere
+
+#### Workspace Commands (📁)
+
+**Location**: Project Workspace Settings
+```
+your-project/.vscode/settings.json
+```
+
+**Stored as**:
+```json
+{
+  "flutterToolbox.customCommands": [
+    {
+      "id": "custom-1234567891",
+      "name": "Deploy to Firebase",
+      "description": "Deploy web app to Firebase hosting",
+      "command": "firebase deploy",
+      "scope": "workspace",
+      "requiresConfirmation": true
+    }
+  ]
+}
+```
+
+**Benefits**:
+- ✅ Available only in this specific project
+- ✅ Can be committed to version control (shared with team)
+- ✅ Project-specific commands stay organized
+- ✅ Different projects can have different commands with the same name
+
+**Use Cases**:
+- Project-specific deployment scripts
+- Custom build configurations
+- Team-shared workflow commands
+- Project-specific testing commands
+
+### 🗂️ Build History
+
+Build sessions and their status are stored **in memory only**:
+- Not persisted to disk
+- Cleared when VS Code is closed
+- Maximum of 5 recent sessions kept
+- Use "Clear Build History" to manually clear
+
+### ⚙️ Extension Settings
+
+All extension settings are stored in VS Code's configuration system:
+- **User Settings**: Apply globally to all projects
+- **Workspace Settings**: Apply only to the current project
+- Accessible via: Settings → Extensions → flutter-toolbox
+
+### 🔄 Settings Sync
+
+If you use **VS Code Settings Sync**:
+- ✅ Global custom commands sync across devices
+- ✅ Extension settings sync across devices
+- ❌ Workspace commands do NOT sync (they're project-specific)
+- ❌ Build history does NOT sync (memory only)
+
+### 📝 Manual Editing
+
+You can manually edit custom commands by opening the settings files:
+
+**For Global Commands**:
+1. Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Type "Preferences: Open User Settings (JSON)"
+3. Edit `flutterToolbox.globalCustomCommands` array
+
+**For Workspace Commands**:
+1. Open `.vscode/settings.json` in your project root
+2. Edit `flutterToolbox.customCommands` array
+3. Optionally commit to Git to share with team
 
 ### Customizing Build Commands
 
@@ -570,10 +755,17 @@ This extension contributes the following commands:
 - `flutter-toolbox.generateFreezedUiState` - Generate freezed UI state boilerplate
 - `flutter-toolbox.generateFreezedModel` - Generate freezed model boilerplate
 
+**Custom Commands:**
+- `flutter-toolbox.addCustomCommand` - Create a new custom command
+- `flutter-toolbox.editCustomCommand` - Edit an existing custom command
+- `flutter-toolbox.deleteCustomCommand` - Delete a custom command
+- `flutter-toolbox.runCustomCommand` - Execute a custom command
+
 **Other Commands:**
 - `flutter-toolbox.refreshView` - Refresh sidebar view
 - `flutter-toolbox.clearSessions` - Clear build history
 - `flutter-toolbox.openOutputFolder` - Open build output folder in Finder/Explorer
+- `flutter-toolbox.showErrorInEditor` - View error details in temporary editor
 
 ## Output and Logs
 
@@ -658,42 +850,66 @@ The generated `flutter-toolbox-0.0.1.vsix` can be installed or shared with other
 ### 0.0.1
 
 Initial release with support for:
+
+**Build & Utilities:**
 - Android APK builds
 - iOS IPA builds
 - Web builds with base-href and optional WebAssembly (WASM)
 - Utility commands (Version, Build Runner, Analyze, Format, Clean, Pub Get, Clean & Pub Get, Pod Install)
-- Environment setup generators (FyUI MCP, Fyers App Launch Config)
-- Git Actions (Open Repo, Open Current File, View Commit, Copy Hash, Create PR, View PR, Open Actions)
-- Sidebar UI with organized sections (Build/Utils/Environment setups/Git Actions)
-- Real-time command-by-command status tracking in sidebar
-- Build history (last 5 builds) with timing
-- Expandable error details in sidebar
-- One-click access to build output folders (APK/IPA/Web)
-- Cross-platform folder opening (macOS/Windows/Linux)
-- Configurable Flutter command prefix (supports FVM)
-- Automatic Dart command derivation from Flutter command
 - Smart build sequencing with multiple clean/pub get cycles
 - Code generation with build_runner
 - Code quality checks with analyze and format
 - iOS dependency management with Pod Install with UTF-8 encoding fix
 - WebAssembly compilation option for web builds
+
+**Custom Commands:**
+- Add, edit, delete, and run custom commands
+- Global commands available across all projects (🌍)
+- Workspace commands specific to each project (📁)
+- Visual indicators for command scope
+- Optional confirmation before execution
+- Full session tracking and error handling
+- Stored in VS Code User Settings (global) or workspace settings (local)
+- Can be shared with team via version control (workspace commands)
+
+**UI & Progress Tracking:**
+- Sidebar UI with organized sections (Build/Utils/Environment setups/Git Actions/Custom Commands)
+- Real-time command-by-command status tracking in sidebar
+- Build history (last 5 builds) with timing
+- Expandable error details in sidebar with "Click to view full error" feature
+- Error details open in temporary editor for easy reading and copying
+- One-click access to build output folders (APK/IPA/Web)
+- Cross-platform folder opening (macOS/Windows/Linux)
+- Status bar progress indicators
+- Detailed output logging
+
+**Configuration & Setup:**
+- Configurable Flutter command prefix (supports FVM)
+- Automatic Dart command derivation from Flutter command
+- Environment setup generators (FyUI MCP, Fyers App Launch Config)
+- Flutter cursor rules setup for projects (with Cursor AI coding guidelines)
+- Automatic directory creation for cursor rules
 - Model Context Protocol integration support
 - VS Code launch.json generator for Fyers App
-- Git integration for GitHub workflows (repo, PRs, actions)
+
+**Git Integration:**
+- Git Actions (Open Repo, Open Current File, View Commit, Copy Hash, Create PR, View PR, Open Actions)
 - Automatic URL opening in default browser
 - Cross-platform browser support (macOS/Windows/Linux)
-- Automatic clipboard copy for generated configs
+
+**Code Generation:**
 - Code generation utilities for freezed boilerplate (Cubit/Bloc state, API state, UI state, Models)
 - Interactive prompts for code generation with validation
 - Support for generic types in API state generation
 - JSON serialization support in model generation
 - Customizable field types and default values
-- Automatic clipboard copy for generated code
-- Flutter cursor rules setup for projects (with Cursor AI coding guidelines)
-- Automatic directory creation for cursor rules
-- File validation and error handling
-- Detailed output logging
-- Status bar progress indicators
+- Automatic clipboard copy for generated code and configs
+
+**Data Persistence:**
+- Global custom commands stored in VS Code User Settings
+- Workspace custom commands stored in project .vscode/settings.json
+- Commands sync across devices (global commands with VS Code Settings Sync)
+- Workspace commands can be committed to Git for team sharing
 
 ## License
 

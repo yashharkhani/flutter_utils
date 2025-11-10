@@ -4,7 +4,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { BuildSession, BuildStepStatus, BuildType, CommandStatus, SessionStatus, SessionType } from './types';
+import { BuildSession, BuildStepStatus, BuildType, CommandStatus, CustomCommand, SessionStatus, SessionType } from './types';
 
 export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<BuildTreeItem | undefined | null | void> = new vscode.EventEmitter<BuildTreeItem | undefined | null | void>();
@@ -97,6 +97,42 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
         if (!element) {
             // Root level - show action buttons and sessions
             return Promise.resolve(this.getRootItems());
+        } else if (element.contextValue === 'customCommand') {
+            // Show edit/delete actions for custom command
+            const children: BuildTreeItem[] = [];
+
+            const editItem = new BuildTreeItem(
+                'Edit',
+                'Edit this command',
+                vscode.TreeItemCollapsibleState.None,
+                'editCustomCommand',
+                new vscode.ThemeIcon('edit', new vscode.ThemeColor('charts.yellow')),
+                'flutter-toolbox.editCustomCommand'
+            );
+            editItem.customCommandId = element.customCommandId;
+
+            const deleteItem = new BuildTreeItem(
+                'Delete',
+                'Delete this command',
+                vscode.TreeItemCollapsibleState.None,
+                'deleteCustomCommand',
+                new vscode.ThemeIcon('trash', new vscode.ThemeColor('charts.red')),
+                'flutter-toolbox.deleteCustomCommand'
+            );
+            deleteItem.customCommandId = element.customCommandId;
+
+            const runItem = new BuildTreeItem(
+                'Run',
+                'Execute this command',
+                vscode.TreeItemCollapsibleState.None,
+                'runCustomCommand',
+                new vscode.ThemeIcon('play', new vscode.ThemeColor('charts.green')),
+                'flutter-toolbox.runCustomCommand'
+            );
+            runItem.customCommandId = element.customCommandId;
+
+            children.push(runItem, editItem, deleteItem);
+            return Promise.resolve(children);
         } else if (element.contextValue === 'buildSession') {
             // Show steps for a session
             const children: BuildTreeItem[] = [];
@@ -475,11 +511,57 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             )
         );
 
+        // Custom Commands section header
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
+                'Custom Commands',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('wrench')
+            )
+        );
+
+        // Add custom command button
+        items.push(
+            new BuildTreeItem(
+                '  + Add Custom Command',
+                'Create a new custom command',
+                vscode.TreeItemCollapsibleState.None,
+                'addCustomCommand',
+                new vscode.ThemeIcon('add', new vscode.ThemeColor('charts.green')),
+                'flutter-toolbox.addCustomCommand'
+            )
+        );
+
+        // Get and display custom commands
+        const customCommands = this.getCustomCommands();
+        customCommands.forEach(cmd => {
+            const scopeIndicator = cmd.scope === 'global' ? '🌍 ' : '📁 ';
+            const item = new BuildTreeItem(
+                `  ${scopeIndicator}${cmd.name}`,
+                cmd.description,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'customCommand',
+                new vscode.ThemeIcon('terminal', new vscode.ThemeColor('charts.cyan'))
+            );
+            item.customCommandId = cmd.id;
+            item.tooltip = `${cmd.scope === 'global' ? 'Global' : 'Workspace'} Command\nCommand: ${cmd.command}\nExpand for options`;
+            items.push(item);
+        });
+
         // Add separator if there are active or recent sessions
         if (this.activeSessions.size > 0 || this.recentSessions.length > 0) {
             items.push(
                 new BuildTreeItem(
-                    '─────────────────────',
+                    '──────────  HISTORY  ───────────',
                     '',
                     vscode.TreeItemCollapsibleState.None,
                     'separator',
@@ -659,6 +741,90 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
 
         return firstLine.substring(0, maxLength) + '...';
     }
+
+    /**
+     * Get custom commands from both global and workspace settings
+     */
+    getCustomCommands(): CustomCommand[] {
+        const config = vscode.workspace.getConfiguration('flutterToolbox');
+        const globalCommands = config.get<CustomCommand[]>('globalCustomCommands', []);
+        const workspaceCommands = config.get<CustomCommand[]>('customCommands', []);
+
+        // Merge global and workspace commands
+        return [...globalCommands, ...workspaceCommands];
+    }
+
+    /**
+     * Get only global custom commands
+     */
+    getGlobalCustomCommands(): CustomCommand[] {
+        const config = vscode.workspace.getConfiguration('flutterToolbox');
+        return config.get<CustomCommand[]>('globalCustomCommands', []);
+    }
+
+    /**
+     * Get only workspace custom commands
+     */
+    getWorkspaceCustomCommands(): CustomCommand[] {
+        const config = vscode.workspace.getConfiguration('flutterToolbox');
+        return config.get<CustomCommand[]>('customCommands', []);
+    }
+
+    /**
+     * Save custom commands to appropriate settings based on scope
+     */
+    async saveCustomCommands(commands: CustomCommand[]): Promise<void> {
+        const config = vscode.workspace.getConfiguration('flutterToolbox');
+
+        // Separate commands by scope
+        const globalCommands = commands.filter(cmd => cmd.scope === 'global');
+        const workspaceCommands = commands.filter(cmd => cmd.scope !== 'global');
+
+        // Save to appropriate targets
+        await config.update('globalCustomCommands', globalCommands, vscode.ConfigurationTarget.Global);
+        await config.update('customCommands', workspaceCommands, vscode.ConfigurationTarget.Workspace);
+
+        this.refresh();
+    }
+
+    /**
+     * Add a new custom command
+     */
+    async addCustomCommand(command: CustomCommand): Promise<void> {
+        const commands = this.getCustomCommands();
+        commands.push(command);
+        await this.saveCustomCommands(commands);
+    }
+
+    /**
+     * Update an existing custom command
+     */
+    async updateCustomCommand(commandId: string, updates: Partial<CustomCommand>): Promise<void> {
+        const commands = this.getCustomCommands();
+        const index = commands.findIndex(cmd => cmd.id === commandId);
+
+        if (index !== -1) {
+            commands[index] = { ...commands[index], ...updates };
+            await this.saveCustomCommands(commands);
+        }
+    }
+
+    /**
+     * Delete a custom command
+     */
+    async deleteCustomCommand(commandId: string): Promise<void> {
+        const commands = this.getCustomCommands();
+        const filtered = commands.filter(cmd => cmd.id !== commandId);
+        await this.saveCustomCommands(filtered);
+    }
+
+    /**
+     * Get a specific custom command by ID
+     */
+    getCustomCommand(commandId: string): CustomCommand | undefined {
+        const commands = this.getCustomCommands();
+        return commands.find(cmd => cmd.id === commandId);
+    }
 }
 
 export class BuildTreeItem extends vscode.TreeItem {
@@ -685,4 +851,5 @@ export class BuildTreeItem extends vscode.TreeItem {
     sessionId?: string;
     error?: string;
     folderPath?: string;
+    customCommandId?: string;
 }

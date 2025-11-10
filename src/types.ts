@@ -73,3 +73,13 @@ export enum SessionStatus {
     Failed = 'failed',
     Cancelled = 'cancelled'
 }
+
+export interface CustomCommand {
+    id: string;
+    name: string;
+    description: string;
+    command: string;
+    workingDirectory?: string;
+    requiresConfirmation?: boolean;
+    scope?: 'global' | 'workspace';
+}
