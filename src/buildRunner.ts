@@ -213,28 +213,18 @@ export class BuildRunner {
 
             this.log(`${'▲'.repeat(60)}\n`);
 
-            // Update step to failed with error
+            // Update step to failed with error (store full error message)
             if (this.treeProvider) {
                 this.treeProvider.updateStepStatus(
                     sessionId,
                     stepIndex,
                     CommandStatus.Failed,
-                    this.truncateError(errorMessage)
+                    errorMessage
                 );
             }
 
             return false;
         }
-    }
-
-    /**
-     * Truncate error message for display in tree view
-     */
-    private truncateError(error: string, maxLength: number = 200): string {
-        if (error.length <= maxLength) {
-            return error;
-        }
-        return error.substring(0, maxLength) + '... (see output for full error)';
     }
 
     /**

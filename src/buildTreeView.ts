@@ -119,16 +119,19 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
 
             return Promise.resolve(children);
         } else if (element.contextValue === 'buildStep' && element.error) {
-            // Show error details as a child
-            return Promise.resolve([
-                new BuildTreeItem(
-                    element.error,
-                    '',
-                    vscode.TreeItemCollapsibleState.None,
-                    'errorDetail',
-                    new vscode.ThemeIcon('error', new vscode.ThemeColor('errorForeground'))
-                )
-            ]);
+            // Show error details as a child with truncated label but full error stored
+            const truncatedLabel = this.truncateErrorLabel(element.error);
+            const errorItem = new BuildTreeItem(
+                truncatedLabel,
+                'Click to view full error',
+                vscode.TreeItemCollapsibleState.None,
+                'errorDetail',
+                new vscode.ThemeIcon('error', new vscode.ThemeColor('errorForeground')),
+                'flutter-toolbox.showErrorInEditor'
+            );
+            errorItem.error = element.error; // Store full error
+            errorItem.tooltip = 'Click to view full error details in editor';
+            return Promise.resolve([errorItem]);
         }
 
         return Promise.resolve([]);
@@ -637,6 +640,24 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             default:
                 return 'build';
         }
+    }
+
+    /**
+     * Truncate error message for display in tree view label
+     */
+    private truncateErrorLabel(error: string, maxLength: number = 150): string {
+        if (!error) {
+            return '';
+        }
+
+        // Get first line only for display
+        const firstLine = error.split('\n')[0];
+
+        if (firstLine.length <= maxLength) {
+            return firstLine;
+        }
+
+        return firstLine.substring(0, maxLength) + '...';
     }
 }
 

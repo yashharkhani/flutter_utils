@@ -208,6 +208,11 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleGitCommit()
     );
 
+    const showErrorInEditorCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.showErrorInEditor',
+        (item: BuildTreeItem) => handleShowErrorInEditor(item)
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -241,6 +246,7 @@ export function activate(context: vscode.ExtensionContext) {
         gitPushCommand,
         gitPullCommand,
         gitCommitCommand,
+        showErrorInEditorCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -1377,6 +1383,33 @@ async function handleAddFlutterCursorRules(context: vscode.ExtensionContext): Pr
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Error adding Flutter cursor rules: ${error.message}`);
+    }
+}
+
+/**
+ * Handle showing error in temporary editor file
+ */
+async function handleShowErrorInEditor(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.error) {
+            vscode.window.showWarningMessage('No error information available.');
+            return;
+        }
+
+        // Create a temporary file with the error content
+        const doc = await vscode.workspace.openTextDocument({
+            content: item.error,
+            language: 'text'
+        });
+
+        // Show the document in editor
+        await vscode.window.showTextDocument(doc, {
+            preview: true,
+            viewColumn: vscode.ViewColumn.Beside
+        });
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to show error: ${error.message}`);
     }
 }
 
