@@ -208,6 +208,11 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleGitCommit()
     );
 
+    const gitFetchCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.gitFetch',
+        () => handleGitCommand('fetch')
+    );
+
     const showErrorInEditorCommand = vscode.commands.registerCommand(
         'flutter-toolbox.showErrorInEditor',
         (item: BuildTreeItem) => handleShowErrorInEditor(item)
@@ -267,6 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
         gitPushCommand,
         gitPullCommand,
         gitCommitCommand,
+        gitFetchCommand,
         showErrorInEditorCommand,
         addCustomCommandCommand,
         editCustomCommandCommand,
@@ -1053,9 +1059,9 @@ function openFolderInFinder(folderPath: string): void {
 }
 
 /**
- * Handle git push/pull command execution
+ * Handle git push/pull/fetch command execution
  */
-async function handleGitCommand(gitType: 'push' | 'pull'): Promise<void> {
+async function handleGitCommand(gitType: 'push' | 'pull' | 'fetch'): Promise<void> {
     try {
         // Get workspace folder
         const workspaceFolder = await getWorkspaceFolder();
@@ -1067,7 +1073,15 @@ async function handleGitCommand(gitType: 'push' | 'pull'): Promise<void> {
         // Get current branch as default
         const currentBranch = await getCurrentBranch(workspaceFolder);
 
-        // Prompt for branch name
+        // For fetch, we don't need branch input
+        if (gitType === 'fetch') {
+            // Get Flutter command from settings
+            const flutterCommand = getFlutterCommand();
+            await utilityRunner.executeGitFetch(workspaceFolder, flutterCommand);
+            return;
+        }
+
+        // Prompt for branch name (for push/pull)
         const branchName = await vscode.window.showInputBox({
             prompt: `Enter the branch name to ${gitType}`,
             placeHolder: currentBranch || 'main',

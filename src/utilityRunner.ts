@@ -284,6 +284,26 @@ export class UtilityRunner {
     }
 
     /**
+     * Execute git fetch
+     */
+    async executeGitFetch(workspaceFolder: string, flutterCommand: string): Promise<boolean> {
+        const steps: BuildStep[] = [
+            {
+                id: 'git-fetch',
+                description: 'Fetch from origin',
+                command: 'git fetch origin'
+            }
+        ];
+
+        return this.executeUtilityWithSession(
+            workspaceFolder,
+            flutterCommand,
+            'Git Fetch',
+            steps
+        );
+    }
+
+    /**
      * Execute pod install
      */
     async executePodInstall(workspaceFolder: string, flutterCommand: string): Promise<boolean> {

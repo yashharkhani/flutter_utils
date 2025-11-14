@@ -847,6 +847,28 @@ The generated `flutter-toolbox-0.0.1.vsix` can be installed or shared with other
 
 ## Release Notes
 
+### 0.0.2
+
+**Custom Commands & Enhanced Error Display**
+
+New Features:
+- ✨ **Custom Commands System** - Create, manage, and execute your own reusable commands
+  - 🌍 Global commands available across all projects
+  - 📁 Workspace commands specific to each project (shareable via Git)
+  - Full CRUD operations (Add, Edit, Delete, Run)
+  - Optional confirmation before execution
+  - Visual scope indicators (🌍/📁)
+  - Stored in VS Code User Settings (global) or `.vscode/settings.json` (workspace)
+- 🔍 **Enhanced Error Display** - Click errors in timeline to view full details in temporary editor
+  - No more truncated error messages
+  - Easy scrolling and copying of complete error output
+  - Better error reading experience
+- 🎨 **UI Improvements**
+  - New "Custom Commands" section in sidebar
+  - Expandable command options (Run/Edit/Delete)
+  - Cleaner history separator with "HISTORY" label
+  - Removed emoji clutter from action buttons
+
 ### 0.0.1
 
 Initial release with support for:

@@ -1,8 +1,8 @@
 {
   "name": "flutter-toolbox",
   "displayName": "flutter-toolbox",
-  "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), and MCP config generators. Real-time status tracking in sidebar.",
-  "version": "0.0.1",
+  "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), custom commands, and MCP config generators. Real-time status tracking in sidebar.",
+  "version": "0.0.2",
   "publisher": "skalex",
   "engines": {
     "vscode": "^1.85.0"

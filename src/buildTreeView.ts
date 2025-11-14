@@ -446,6 +446,14 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'flutter-toolbox.gitPull'
             ),
             new BuildTreeItem(
+                '  Git Fetch',
+                'Fetch from origin',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('cloud-download', new vscode.ThemeColor('charts.cyan')),
+                'flutter-toolbox.gitFetch'
+            ),
+            new BuildTreeItem(
                 '  Git Commit',
                 'Commit with type selection',
                 vscode.TreeItemCollapsibleState.None,
