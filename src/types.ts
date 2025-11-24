@@ -83,3 +83,10 @@ export interface CustomCommand {
     requiresConfirmation?: boolean;
     scope?: 'global' | 'workspace';
 }
+
+export interface Prompt {
+    id: string;
+    title: string;
+    prompt: string;
+    description?: string;
+}

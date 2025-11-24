@@ -4,6 +4,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { PromptManager } from './promptManager';
 import { BuildSession, BuildStepStatus, BuildType, CommandStatus, CustomCommand, SessionStatus, SessionType } from './types';
 
 export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem> {
@@ -97,6 +98,42 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
         if (!element) {
             // Root level - show action buttons and sessions
             return Promise.resolve(this.getRootItems());
+        } else if (element.contextValue === 'promptItem') {
+            // Show copy/edit/delete actions for prompt
+            const children: BuildTreeItem[] = [];
+
+            const copyItem = new BuildTreeItem(
+                'Copy to Clipboard',
+                'Copy this prompt',
+                vscode.TreeItemCollapsibleState.None,
+                'copyPrompt',
+                new vscode.ThemeIcon('clippy', new vscode.ThemeColor('charts.green')),
+                'flutter-toolbox.copyPrompt'
+            );
+            copyItem.promptId = element.promptId;
+
+            const editItem = new BuildTreeItem(
+                'Edit',
+                'Edit this prompt',
+                vscode.TreeItemCollapsibleState.None,
+                'editPrompt',
+                new vscode.ThemeIcon('edit', new vscode.ThemeColor('charts.yellow')),
+                'flutter-toolbox.editPrompt'
+            );
+            editItem.promptId = element.promptId;
+
+            const deleteItem = new BuildTreeItem(
+                'Delete',
+                'Delete this prompt',
+                vscode.TreeItemCollapsibleState.None,
+                'deletePrompt',
+                new vscode.ThemeIcon('trash', new vscode.ThemeColor('charts.red')),
+                'flutter-toolbox.deletePrompt'
+            );
+            deleteItem.promptId = element.promptId;
+
+            children.push(copyItem, editItem, deleteItem);
+            return Promise.resolve(children);
         } else if (element.contextValue === 'customCommand') {
             // Show edit/delete actions for custom command
             const children: BuildTreeItem[] = [];
@@ -408,6 +445,57 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'flutter-toolbox.generateFreezedModel'
             )
         );
+
+        // AI Prompts section header
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            ),
+            new BuildTreeItem(
+                'AI Prompts',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'sectionHeader',
+                new vscode.ThemeIcon('lightbulb')
+            )
+        );
+
+        // Add prompt button
+        items.push(
+            new BuildTreeItem(
+                '  + Add AI Prompt',
+                'Create a new AI prompt',
+                vscode.TreeItemCollapsibleState.None,
+                'addPrompt',
+                new vscode.ThemeIcon('add', new vscode.ThemeColor('charts.green')),
+                'flutter-toolbox.addPrompt'
+            )
+        );
+
+        // Get and display prompts
+        const prompts = PromptManager.getPrompts();
+        prompts.forEach(prompt => {
+            const item = new BuildTreeItem(
+                `  ${prompt.title}`,
+                prompt.description || '',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'promptItem',
+                new vscode.ThemeIcon('comment', new vscode.ThemeColor('charts.cyan'))
+            );
+            item.promptId = prompt.id;
+            item.tooltip = `${prompt.title}\n\n${prompt.prompt}`;
+            // Make clicking the prompt copy it to clipboard
+            item.command = {
+                command: 'flutter-toolbox.copyPrompt',
+                title: 'Copy Prompt',
+                arguments: [item]
+            };
+            items.push(item);
+        });
 
         // Git Actions section header
         items.push(
@@ -860,4 +948,5 @@ export class BuildTreeItem extends vscode.TreeItem {
     error?: string;
     folderPath?: string;
     customCommandId?: string;
+    promptId?: string;
 }

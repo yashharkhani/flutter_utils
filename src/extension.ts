@@ -15,7 +15,8 @@ import {
     generateFreezedModel,
     generateFreezedUiState
 } from './codeGenerator';
-import { BuildType, CustomCommand } from './types';
+import { PromptManager } from './promptManager';
+import { BuildType, CustomCommand, Prompt } from './types';
 import { UtilityRunner } from './utilityRunner';
 
 let buildRunner: BuildRunner;
@@ -183,6 +184,27 @@ export function activate(context: vscode.ExtensionContext) {
         () => generateFreezedModel()
     );
 
+    // AI Prompt commands
+    const addPromptCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.addPrompt',
+        () => handleAddPrompt()
+    );
+
+    const editPromptCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.editPrompt',
+        (item: BuildTreeItem) => handleEditPrompt(item)
+    );
+
+    const deletePromptCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.deletePrompt',
+        (item: BuildTreeItem) => handleDeletePrompt(item)
+    );
+
+    const copyPromptCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.copyPrompt',
+        (item: BuildTreeItem) => handleCopyPrompt(item)
+    );
+
     const addFlutterCursorRulesCommand = vscode.commands.registerCommand(
         'flutter-toolbox.addFlutterCursorRules',
         () => handleAddFlutterCursorRules(context)
@@ -267,6 +289,10 @@ export function activate(context: vscode.ExtensionContext) {
         generateFreezedApiStateCommand,
         generateFreezedUiStateCommand,
         generateFreezedModelCommand,
+        addPromptCommand,
+        editPromptCommand,
+        deletePromptCommand,
+        copyPromptCommand,
         addFlutterCursorRulesCommand,
         setupGitAICommand,
         gitPushCommand,
@@ -1795,6 +1821,218 @@ async function handleRunCustomCommand(item: BuildTreeItem): Promise<void> {
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Failed to run custom command: ${error.message}`);
+    }
+}
+
+/**
+ * Handle adding a new AI prompt
+ */
+async function handleAddPrompt(): Promise<void> {
+    try {
+        // Get prompt title
+        const title = await vscode.window.showInputBox({
+            prompt: 'Enter a title for this prompt',
+            placeHolder: 'e.g., Generate Flutter Widget, Create Repository Pattern',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Prompt title cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!title) {
+            return; // User cancelled
+        }
+
+        // Get description (optional)
+        const description = await vscode.window.showInputBox({
+            prompt: 'Enter a brief description (optional)',
+            placeHolder: 'e.g., Creates a reusable stateless widget',
+            ignoreFocusOut: true
+        });
+
+        // Get the actual prompt text
+        const promptText = await vscode.window.showInputBox({
+            prompt: 'Enter the AI prompt text',
+            placeHolder: 'Enter the prompt that will be copied to clipboard...',
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Prompt text cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!promptText) {
+            return; // User cancelled
+        }
+
+        // Create the prompt
+        const prompt: Prompt = {
+            id: `prompt-${Date.now()}`,
+            title: title.trim(),
+            prompt: promptText.trim(),
+            description: description?.trim()
+        };
+
+        // Add to prompt manager
+        await PromptManager.addPrompt(prompt);
+
+        // Refresh tree view
+        treeDataProvider.refresh();
+
+        vscode.window.showInformationMessage(`Prompt "${title}" added successfully!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to add prompt: ${error.message}`);
+    }
+}
+
+/**
+ * Handle editing an existing AI prompt
+ */
+async function handleEditPrompt(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.promptId) {
+            vscode.window.showWarningMessage('No prompt ID found.');
+            return;
+        }
+
+        const existingPrompt = PromptManager.getPromptById(item.promptId);
+        if (!existingPrompt) {
+            vscode.window.showWarningMessage('Prompt not found.');
+            return;
+        }
+
+        // Get new title
+        const title = await vscode.window.showInputBox({
+            prompt: 'Enter a title for this prompt',
+            placeHolder: 'e.g., Generate Flutter Widget',
+            value: existingPrompt.title,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Prompt title cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!title) {
+            return; // User cancelled
+        }
+
+        // Get new description
+        const description = await vscode.window.showInputBox({
+            prompt: 'Enter a brief description (optional)',
+            placeHolder: 'e.g., Creates a reusable stateless widget',
+            value: existingPrompt.description || '',
+            ignoreFocusOut: true
+        });
+
+        // Get new prompt text
+        const promptText = await vscode.window.showInputBox({
+            prompt: 'Enter the AI prompt text',
+            placeHolder: 'Enter the prompt that will be copied to clipboard...',
+            value: existingPrompt.prompt,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Prompt text cannot be empty';
+                }
+                return null;
+            }
+        });
+
+        if (!promptText) {
+            return; // User cancelled
+        }
+
+        // Update the prompt
+        await PromptManager.updatePrompt(item.promptId, {
+            title: title.trim(),
+            prompt: promptText.trim(),
+            description: description?.trim()
+        });
+
+        // Refresh tree view
+        treeDataProvider.refresh();
+
+        vscode.window.showInformationMessage(`Prompt "${title}" updated successfully!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to edit prompt: ${error.message}`);
+    }
+}
+
+/**
+ * Handle deleting an AI prompt
+ */
+async function handleDeletePrompt(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.promptId) {
+            vscode.window.showWarningMessage('No prompt ID found.');
+            return;
+        }
+
+        const existingPrompt = PromptManager.getPromptById(item.promptId);
+        if (!existingPrompt) {
+            vscode.window.showWarningMessage('Prompt not found.');
+            return;
+        }
+
+        // Confirm deletion
+        const confirm = await vscode.window.showWarningMessage(
+            `Are you sure you want to delete the prompt "${existingPrompt.title}"?`,
+            { modal: true },
+            'Delete',
+            'Cancel'
+        );
+
+        if (confirm !== 'Delete') {
+            return;
+        }
+
+        // Delete the prompt
+        await PromptManager.deletePrompt(item.promptId);
+
+        // Refresh tree view
+        treeDataProvider.refresh();
+
+        vscode.window.showInformationMessage(`Prompt "${existingPrompt.title}" deleted successfully!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to delete prompt: ${error.message}`);
+    }
+}
+
+/**
+ * Handle copying an AI prompt to clipboard
+ */
+async function handleCopyPrompt(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.promptId) {
+            vscode.window.showWarningMessage('No prompt ID found.');
+            return;
+        }
+
+        const prompt = PromptManager.getPromptById(item.promptId);
+        if (!prompt) {
+            vscode.window.showWarningMessage('Prompt not found.');
+            return;
+        }
+
+        // Copy to clipboard
+        await vscode.env.clipboard.writeText(prompt.prompt);
+
+        // Show success message
+        vscode.window.showInformationMessage(`✓ Prompt "${prompt.title}" copied to clipboard!`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to copy prompt: ${error.message}`);
     }
 }
 

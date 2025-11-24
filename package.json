@@ -194,6 +194,26 @@
         "command": "flutter-toolbox.gitCommit",
         "title": "Git: Commit with Type",
         "icon": "$(git-commit)"
+      },
+      {
+        "command": "flutter-toolbox.addPrompt",
+        "title": "AI: Add Prompt",
+        "icon": "$(add)"
+      },
+      {
+        "command": "flutter-toolbox.editPrompt",
+        "title": "AI: Edit Prompt",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "flutter-toolbox.deletePrompt",
+        "title": "AI: Delete Prompt",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "flutter-toolbox.copyPrompt",
+        "title": "AI: Copy Prompt to Clipboard",
+        "icon": "$(clippy)"
       }
     ],
     "menus": {
@@ -320,6 +340,38 @@
               "name",
               "description",
               "command"
+            ]
+          }
+        },
+        "flutterToolbox.aiPrompts": {
+          "type": "array",
+          "default": [],
+          "description": "AI/LLM prompts for code generation and development",
+          "scope": "application",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the prompt"
+              },
+              "title": {
+                "type": "string",
+                "description": "Display title of the prompt"
+              },
+              "prompt": {
+                "type": "string",
+                "description": "The actual prompt text that will be copied"
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional brief description of what the prompt does"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "prompt"
             ]
           }
         }
