@@ -5,7 +5,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PromptManager } from './promptManager';
-import { BuildSession, BuildStepStatus, BuildType, CommandStatus, CustomCommand, SessionStatus, SessionType } from './types';
+import { BuildSession, BuildStepStatus, BuildType, CommandStatus, CustomCommand, MakefileEntry, SessionStatus, SessionType } from './types';
 
 export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<BuildTreeItem | undefined | null | void> = new vscode.EventEmitter<BuildTreeItem | undefined | null | void>();
@@ -14,11 +14,25 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
     private activeSessions: Map<string, BuildSession> = new Map();
     private recentSessions: BuildSession[] = [];
     private maxRecentSessions = 5;
+    private makefileEntries: MakefileEntry[] = [];
 
     constructor() {}
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
+    }
+
+    /**
+     * Update the Makefile entries shown in the sidebar.
+     * Called from extension.ts after loading or refreshing.
+     */
+    setMakefileData(entries: MakefileEntry[]): void {
+        this.makefileEntries = entries;
+        this.refresh();
+    }
+
+    getMakefileEntries(): MakefileEntry[] {
+        return this.makefileEntries;
     }
 
     /**
@@ -98,6 +112,40 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
         if (!element) {
             // Root level - show action buttons and sessions
             return Promise.resolve(this.getRootItems());
+        } else if (element.contextValue === 'makefileFile') {
+            // Return target items for this Makefile file node
+            const entry = this.makefileEntries.find(e => e.absolutePath === element.makefilePath);
+            if (!entry || entry.targets.length === 0) {
+                const emptyItem = new BuildTreeItem(
+                    'No targets found',
+                    'Add targets to this Makefile',
+                    vscode.TreeItemCollapsibleState.None,
+                    'makefileEmpty',
+                    new vscode.ThemeIcon('info', new vscode.ThemeColor('disabledForeground'))
+                );
+                return Promise.resolve([emptyItem]);
+            }
+            return Promise.resolve(
+                entry.targets.map(target => {
+                    const item = new BuildTreeItem(
+                        `make ${target.name}`,
+                        target.description || '',
+                        vscode.TreeItemCollapsibleState.None,
+                        'makefileTarget',
+                        new vscode.ThemeIcon('play', new vscode.ThemeColor('charts.green')),
+                        'flutter-toolbox.runMakeTarget'
+                    );
+                    item.makefileTargetName = target.name;
+                    item.makefilePath = target.makefilePath;
+                    item.tooltip = new vscode.MarkdownString(
+                        `**make ${target.name}**` +
+                        (target.description ? `\n\n${target.description}` : '') +
+                        `\n\n_Click to run this target. Output appears in the History section below._`,
+                        true
+                    );
+                    return item;
+                })
+            );
         } else if (element.contextValue === 'promptItem') {
             // Show copy/edit/delete actions for prompt
             const children: BuildTreeItem[] = [];
@@ -653,6 +701,69 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             items.push(item);
         });
 
+        // ─── Makefile Commands section ───────────────────────────────────
+        items.push(
+            new BuildTreeItem(
+                '',
+                '',
+                vscode.TreeItemCollapsibleState.None,
+                'separator',
+                new vscode.ThemeIcon('dash')
+            )
+        );
+
+        const makefileHeaderItem = new BuildTreeItem(
+            'Makefile Commands',
+            '',
+            vscode.TreeItemCollapsibleState.None,
+            'makefileHeader',
+            new vscode.ThemeIcon('file-code')
+        );
+        makefileHeaderItem.tooltip = new vscode.MarkdownString(
+            '### Makefile Commands\n\n' +
+            'Discover and run `make` targets from Makefiles in your project.\n\n' +
+            '**⚙ Gear icon** → Select which Makefiles to show\n\n' +
+            '**↻ Refresh icon** → Re-parse a Makefile after editing it\n\n' +
+            '**▷ Play icon** → Click any target to run it (output appears in History below)',
+            true
+        );
+        items.push(makefileHeaderItem);
+
+        if (this.makefileEntries.length === 0) {
+            items.push(
+                new BuildTreeItem(
+                    '  No Makefiles selected',
+                    'Click the ⚙ gear icon to select files',
+                    vscode.TreeItemCollapsibleState.None,
+                    'makefileEmpty',
+                    new vscode.ThemeIcon('info', new vscode.ThemeColor('disabledForeground'))
+                )
+            );
+        } else {
+            this.makefileEntries.forEach(entry => {
+                const fileItem = new BuildTreeItem(
+                    `  📄 ${entry.relativePath}`,
+                    `${entry.targets.length} target${entry.targets.length !== 1 ? 's' : ''}`,
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    'makefileFile',
+                    new vscode.ThemeIcon('file-code', new vscode.ThemeColor('charts.blue'))
+                );
+                fileItem.makefilePath = entry.absolutePath;
+                fileItem.tooltip = new vscode.MarkdownString(
+                    `**${entry.relativePath}**\n\n` +
+                    `📁 \`${entry.absolutePath}\`\n\n` +
+                    `Targets: **${entry.targets.length}**` +
+                    (entry.targets.length > 0
+                        ? '\n\n' + entry.targets.slice(0, 8).map(t => `- \`make ${t.name}\``).join('\n') +
+                          (entry.targets.length > 8 ? `\n- _…and ${entry.targets.length - 8} more_` : '')
+                        : '') +
+                    '\n\n_Click the ↻ icon to reload targets after editing this file_',
+                    true
+                );
+                items.push(fileItem);
+            });
+        }
+
         // Add separator if there are active or recent sessions
         if (this.activeSessions.size > 0 || this.recentSessions.length > 0) {
             items.push(
@@ -949,4 +1060,6 @@ export class BuildTreeItem extends vscode.TreeItem {
     folderPath?: string;
     customCommandId?: string;
     promptId?: string;
+    makefilePath?: string;
+    makefileTargetName?: string;
 }

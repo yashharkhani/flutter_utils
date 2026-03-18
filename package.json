@@ -31,6 +31,12 @@
           "name": "Flutter Utils",
           "icon": "resources/icon.svg",
           "contextualTitle": "Flutter Utils"
+        },
+        {
+          "id": "aiToolsView",
+          "name": "AI Tools",
+          "icon": "$(robot)",
+          "contextualTitle": "AI Tools"
         }
       ]
     },
@@ -214,6 +220,46 @@
         "command": "flutter-toolbox.copyPrompt",
         "title": "AI: Copy Prompt to Clipboard",
         "icon": "$(clippy)"
+      },
+      {
+        "command": "flutter-toolbox.selectMakefiles",
+        "title": "Makefile: Select Files",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "flutter-toolbox.reloadMakefile",
+        "title": "Makefile: Reload Targets",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "flutter-toolbox.runMakeTarget",
+        "title": "Makefile: Run Target",
+        "icon": "$(play)"
+      },
+      {
+        "command": "flutter-toolbox.openAiSkill",
+        "title": "AI Tools: Open File",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "flutter-toolbox.copyAiSkill",
+        "title": "AI Tools: Copy to Clipboard",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "flutter-toolbox.refreshAiTools",
+        "title": "AI Tools: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "flutter-toolbox.addAiToolPath",
+        "title": "AI Tools: Add Custom Path",
+        "icon": "$(add)"
+      },
+      {
+        "command": "flutter-toolbox.removeAiToolPath",
+        "title": "AI Tools: Remove Custom Path",
+        "icon": "$(trash)"
       }
     ],
     "menus": {
@@ -227,6 +273,43 @@
           "command": "flutter-toolbox.clearSessions",
           "when": "view == flutterToolboxView",
           "group": "navigation"
+        },
+        {
+          "command": "flutter-toolbox.refreshAiTools",
+          "when": "view == aiToolsView",
+          "group": "navigation"
+        },
+        {
+          "command": "flutter-toolbox.addAiToolPath",
+          "when": "view == aiToolsView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "flutter-toolbox.reloadMakefile",
+          "when": "view == flutterToolboxView && viewItem == makefileFile",
+          "group": "inline"
+        },
+        {
+          "command": "flutter-toolbox.selectMakefiles",
+          "when": "view == flutterToolboxView && viewItem == makefileHeader",
+          "group": "inline"
+        },
+        {
+          "command": "flutter-toolbox.refreshAiTools",
+          "when": "view == aiToolsView && viewItem == aiToolGroup",
+          "group": "inline"
+        },
+        {
+          "command": "flutter-toolbox.copyAiSkill",
+          "when": "view == aiToolsView && viewItem == aiSkill",
+          "group": "inline"
+        },
+        {
+          "command": "flutter-toolbox.removeAiToolPath",
+          "when": "view == aiToolsView && viewItem == aiToolGroup",
+          "group": "remove"
         }
       ]
     },
@@ -285,7 +368,10 @@
               },
               "scope": {
                 "type": "string",
-                "enum": ["global", "workspace"],
+                "enum": [
+                  "global",
+                  "workspace"
+                ],
                 "description": "Scope of the command (global or workspace)"
               }
             },
@@ -331,7 +417,10 @@
               },
               "scope": {
                 "type": "string",
-                "enum": ["global", "workspace"],
+                "enum": [
+                  "global",
+                  "workspace"
+                ],
                 "description": "Scope of the command (global or workspace)"
               }
             },

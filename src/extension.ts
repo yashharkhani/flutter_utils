@@ -15,6 +15,19 @@ import {
     generateFreezedModel,
     generateFreezedUiState
 } from './codeGenerator';
+import {
+    buildMakefileEntries,
+    buildSingleMakefileEntry,
+    findMakefiles,
+    getSelectedMakefilePaths,
+    saveSelectedMakefilePaths
+} from './makefileManager';
+import {
+    discoverSkills,
+    getCustomScanPaths,
+    saveCustomScanPaths
+} from './aiToolsManager';
+import { AiToolsTreeItem, AiToolsTreeProvider } from './aiToolsTreeView';
 import { PromptManager } from './promptManager';
 import { BuildType, CustomCommand, Prompt } from './types';
 import { UtilityRunner } from './utilityRunner';
@@ -22,15 +35,25 @@ import { UtilityRunner } from './utilityRunner';
 let buildRunner: BuildRunner;
 let utilityRunner: UtilityRunner;
 let treeDataProvider: BuildTreeProvider;
+let aiToolsTreeProvider: AiToolsTreeProvider;
+let extensionContext: vscode.ExtensionContext;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('flutter-toolbox extension is now active');
+    extensionContext = context;
 
     // Initialize tree view provider first
     treeDataProvider = new BuildTreeProvider();
     const treeView = vscode.window.registerTreeDataProvider(
         'flutterToolboxView',
         treeDataProvider
+    );
+
+    // Initialize AI Tools view
+    aiToolsTreeProvider = new AiToolsTreeProvider();
+    const aiToolsView = vscode.window.registerTreeDataProvider(
+        'aiToolsView',
+        aiToolsTreeProvider
     );
 
     // Initialize build runner and utility runner with tree provider
@@ -261,6 +284,60 @@ export function activate(context: vscode.ExtensionContext) {
         (item: BuildTreeItem) => handleRunCustomCommand(item)
     );
 
+    // Makefile commands
+    const selectMakefilesCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.selectMakefiles',
+        () => handleSelectMakefiles(context)
+    );
+
+    const reloadMakefileCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.reloadMakefile',
+        (item: BuildTreeItem) => handleReloadMakefile(item)
+    );
+
+    const runMakeTargetCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.runMakeTarget',
+        (item: BuildTreeItem) => handleRunMakeTarget(item)
+    );
+
+    // Load Makefile data for the current workspace on startup
+    loadMakefileData(context);
+
+    // Load AI Tools data for the current workspace on startup
+    loadAiToolsData(context);
+
+    // Reload both when the workspace changes
+    const workspaceFoldersChangeListener = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        loadMakefileData(context);
+        loadAiToolsData(context);
+    });
+
+    // AI Tools commands
+    const openAiSkillCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.openAiSkill',
+        (filePath: string) => handleOpenAiSkill(filePath)
+    );
+
+    const refreshAiToolsCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.refreshAiTools',
+        (item?: AiToolsTreeItem) => handleRefreshAiTools(item, context)
+    );
+
+    const addAiToolPathCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.addAiToolPath',
+        () => handleAddAiToolPath(context)
+    );
+
+    const removeAiToolPathCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.removeAiToolPath',
+        (item: AiToolsTreeItem) => handleRemoveAiToolPath(item, context)
+    );
+
+    const copyAiSkillCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.copyAiSkill',
+        (item: AiToolsTreeItem) => handleCopyAiSkill(item)
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -304,7 +381,17 @@ export function activate(context: vscode.ExtensionContext) {
         editCustomCommandCommand,
         deleteCustomCommandCommand,
         runCustomCommandCommand,
+        selectMakefilesCommand,
+        reloadMakefileCommand,
+        runMakeTargetCommand,
+        openAiSkillCommand,
+        refreshAiToolsCommand,
+        addAiToolPathCommand,
+        removeAiToolPathCommand,
+        copyAiSkillCommand,
+        workspaceFoldersChangeListener,
         treeView,
+        aiToolsView,
         buildRunner,
         utilityRunner
     );
@@ -2036,11 +2123,306 @@ async function handleCopyPrompt(item: BuildTreeItem): Promise<void> {
     }
 }
 
+/**
+ * Load saved Makefile selections for the current workspace and hydrate the tree.
+ */
+function loadMakefileData(context: vscode.ExtensionContext): void {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+        treeDataProvider.setMakefileData([]);
+        return;
+    }
+
+    // Use the first workspace folder as the project root
+    const projectRoot = workspaceFolders[0].uri.fsPath;
+    const entries = buildMakefileEntries(context, projectRoot);
+    treeDataProvider.setMakefileData(entries);
+}
+
+/**
+ * Handle "Select Makefiles" – show multi-select picker of all Makefiles in the workspace.
+ */
+async function handleSelectMakefiles(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found. Please open a project.');
+            return;
+        }
+
+        // Find all Makefiles in the project
+        const allMakefiles = findMakefiles(workspaceFolder);
+
+        if (allMakefiles.length === 0) {
+            vscode.window.showInformationMessage('No Makefiles found in this project.');
+            return;
+        }
+
+        // Get currently saved selection for pre-checking
+        const currentSelection = getSelectedMakefilePaths(context, workspaceFolder);
+        const currentSet = new Set(currentSelection);
+
+        // Build QuickPick items with relative paths
+        const quickPickItems = allMakefiles.map(absolutePath => {
+            const relativePath = path.relative(workspaceFolder, absolutePath);
+            return {
+                label: relativePath,
+                description: absolutePath,
+                absolutePath,
+                picked: currentSet.has(absolutePath)
+            };
+        });
+
+        const selected = await vscode.window.showQuickPick(quickPickItems, {
+            canPickMany: true,
+            placeHolder: 'Select Makefiles to show commands from',
+            ignoreFocusOut: true,
+            title: 'Makefile Commands – Select Files'
+        });
+
+        if (selected === undefined) {
+            return; // User cancelled
+        }
+
+        // Save and refresh
+        const selectedPaths = selected.map(item => item.absolutePath);
+        await saveSelectedMakefilePaths(context, workspaceFolder, selectedPaths);
+
+        // Rebuild entries and push to tree
+        const entries = buildMakefileEntries(context, workspaceFolder);
+        treeDataProvider.setMakefileData(entries);
+
+        if (selected.length === 0) {
+            vscode.window.showInformationMessage('Makefile selection cleared.');
+        } else {
+            vscode.window.showInformationMessage(
+                `Showing commands from ${selected.length} Makefile${selected.length !== 1 ? 's' : ''}.`
+            );
+        }
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to select Makefiles: ${error.message}`);
+    }
+}
+
+/**
+ * Handle "Reload Makefile" – re-parse a single file without touching saved selection.
+ */
+async function handleReloadMakefile(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.makefilePath) {
+            vscode.window.showWarningMessage('No Makefile path found.');
+            return;
+        }
+
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            return;
+        }
+
+        // Build a fresh entry for just this file
+        const freshEntry = buildSingleMakefileEntry(item.makefilePath, workspaceFolder);
+
+        // Get existing entries, replace the one for this file
+        const existingEntries = treeDataProvider.getMakefileEntries();
+        const updatedEntries = existingEntries.map(e =>
+            e.absolutePath === item.makefilePath ? freshEntry : e
+        );
+
+        treeDataProvider.setMakefileData(updatedEntries);
+
+        vscode.window.showInformationMessage(
+            `Reloaded ${freshEntry.relativePath} – found ${freshEntry.targets.length} target${freshEntry.targets.length !== 1 ? 's' : ''}.`
+        );
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to reload Makefile: ${error.message}`);
+    }
+}
+
+/**
+ * Handle "Run Make Target" – runs `make <target>` in the Makefile's directory.
+ */
+async function handleRunMakeTarget(item: BuildTreeItem): Promise<void> {
+    try {
+        if (!item.makefileTargetName || !item.makefilePath) {
+            vscode.window.showWarningMessage('No make target information found.');
+            return;
+        }
+
+        const targetName = item.makefileTargetName;
+        const makefileDir = path.dirname(item.makefilePath);
+
+        const steps = [
+            {
+                id: `make-${targetName}`,
+                description: `make ${targetName}`,
+                command: `make ${targetName}`
+            }
+        ];
+
+        await utilityRunner.executeUtilityWithSession(
+            makefileDir,
+            getFlutterCommand(), // pass flutter command (used only for version banner)
+            `make ${targetName}`,
+            steps
+        );
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to run make target: ${error.message}`);
+    }
+}
+
 export function deactivate() {
     if (buildRunner) {
         buildRunner.dispose();
     }
     if (utilityRunner) {
         utilityRunner.dispose();
+    }
+}
+
+// ═══ AI Tools Handlers ══════════════════════════════════════════════════════
+
+/**
+ * Load (or reload) discovered AI skills for the current workspace.
+ */
+function loadAiToolsData(context: vscode.ExtensionContext): void {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+        aiToolsTreeProvider.setGroups([]);
+        return;
+    }
+    const projectRoot = workspaceFolders[0].uri.fsPath;
+    const groups = discoverSkills(projectRoot, context);
+    aiToolsTreeProvider.setGroups(groups);
+}
+
+/**
+ * Open a skill/agent file in the editor.
+ */
+async function handleOpenAiSkill(filePath: string): Promise<void> {
+    try {
+        const doc = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(doc);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to open file: ${error.message}`);
+    }
+}
+
+/**
+ * Copy the contents of a skill file to the clipboard.
+ */
+async function handleCopyAiSkill(item: AiToolsTreeItem): Promise<void> {
+    try {
+        if (!item.skillFilePath) {
+            vscode.window.showWarningMessage('No file path found.');
+            return;
+        }
+        const fs = await import('fs');
+        const content = fs.readFileSync(item.skillFilePath, 'utf-8');
+        await vscode.env.clipboard.writeText(content);
+        vscode.window.showInformationMessage(`✓ Copied "${item.label}" to clipboard`);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to copy file: ${error.message}`);
+    }
+}
+
+/**
+ * Refresh the AI Tools view (re-scan all paths).
+ */
+async function handleRefreshAiTools(
+    _item: AiToolsTreeItem | undefined,
+    context: vscode.ExtensionContext
+): Promise<void> {
+    loadAiToolsData(context);
+}
+
+/**
+ * Add a custom folder path to crawl for AI skills.
+ * The user can type a path relative to the project root or an absolute path.
+ */
+async function handleAddAiToolPath(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder) {
+            vscode.window.showErrorMessage('No workspace folder found.');
+            return;
+        }
+
+        // Also offer a folder picker
+        const choice = await vscode.window.showQuickPick(
+            [
+                { label: '$(folder) Browse for folder…', value: 'browse' },
+                { label: '$(pencil) Type a path…', value: 'type' },
+            ],
+            { title: 'AI Tools – Add Custom Path', placeHolder: 'How would you like to add a path?' }
+        );
+
+        if (!choice) { return; }
+
+        let folderPath: string | undefined;
+
+        if (choice.value === 'browse') {
+            const uris = await vscode.window.showOpenDialog({
+                canSelectFolders: true,
+                canSelectFiles: false,
+                canSelectMany: false,
+                openLabel: 'Select Folder',
+                title: 'Select a folder containing AI skill files',
+                defaultUri: vscode.Uri.file(workspaceFolder),
+            });
+            folderPath = uris?.[0]?.fsPath;
+        } else {
+            folderPath = await vscode.window.showInputBox({
+                title: 'AI Tools – Add Custom Path',
+                placeHolder: 'e.g. .cursor/agents  or  /absolute/path/to/agents',
+                prompt: 'Enter a path relative to the project root, or an absolute path',
+                ignoreFocusOut: true,
+            });
+        }
+
+        if (!folderPath?.trim()) { return; }
+
+        const existing = getCustomScanPaths(context, workspaceFolder);
+        if (existing.includes(folderPath.trim())) {
+            vscode.window.showInformationMessage('This path is already in the list.');
+            return;
+        }
+
+        await saveCustomScanPaths(context, workspaceFolder, [...existing, folderPath.trim()]);
+        loadAiToolsData(context);
+        vscode.window.showInformationMessage(`Added custom path: ${folderPath.trim()}`);
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to add path: ${error.message}`);
+    }
+}
+
+/**
+ * Remove a custom scan path (shown when right-clicking a Custom group).
+ */
+async function handleRemoveAiToolPath(
+    item: AiToolsTreeItem,
+    context: vscode.ExtensionContext
+): Promise<void> {
+    try {
+        const workspaceFolder = await getWorkspaceFolder();
+        if (!workspaceFolder || !item.groupSourcePath) { return; }
+
+        const existing = getCustomScanPaths(context, workspaceFolder);
+
+        // Match by absolute or relative path
+        const filtered = existing.filter(p => {
+            const abs = p.startsWith('/') ? p : `${workspaceFolder}/${p}`;
+            return abs !== item.groupSourcePath && p !== item.groupSourcePath;
+        });
+
+        await saveCustomScanPaths(context, workspaceFolder, filtered);
+        loadAiToolsData(context);
+        vscode.window.showInformationMessage('Custom path removed.');
+
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to remove path: ${error.message}`);
     }
 }
