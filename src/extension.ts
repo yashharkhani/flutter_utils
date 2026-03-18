@@ -89,6 +89,16 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    const stopSessionCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.stopSession',
+        (item: BuildTreeItem) => {
+            if (item && item.sessionId) {
+                buildRunner.stopSession(item.sessionId);
+                utilityRunner.stopSession(item.sessionId);
+            }
+        }
+    );
+
     const openOutputFolderCommand = vscode.commands.registerCommand(
         'flutter-toolbox.openOutputFolder',
         (item: BuildTreeItem) => {
@@ -344,6 +354,7 @@ export function activate(context: vscode.ExtensionContext) {
         buildWebCommand,
         refreshViewCommand,
         clearSessionsCommand,
+        stopSessionCommand,
         openOutputFolderCommand,
         flutterVersionCommand,
         buildRunnerCommand,

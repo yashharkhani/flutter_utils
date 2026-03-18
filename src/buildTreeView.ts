@@ -16,7 +16,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
     private maxRecentSessions = 5;
     private makefileEntries: MakefileEntry[] = [];
 
-    constructor() {}
+    constructor() { }
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
@@ -226,7 +226,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
 
             // Add "Open in Finder" button for completed successful builds (not utilities)
             const session = this.activeSessions.get(element.sessionId!) ||
-                           this.recentSessions.find(s => s.id === element.sessionId!);
+                this.recentSessions.find(s => s.id === element.sessionId!);
 
             if (session && session.status === SessionStatus.Completed && session.workspaceFolder) {
                 // Only show for actual build sessions, not utility sessions
@@ -406,22 +406,22 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
 
         // MCP action buttons
         items.push(
-            new BuildTreeItem(
-                '  Generate FYERS UI MCP Config',
-                'Generate MCP configuration for fy_ui library',
-                vscode.TreeItemCollapsibleState.None,
-                'mcpAction',
-                new vscode.ThemeIcon('json', new vscode.ThemeColor('charts.purple')),
-                'flutter-toolbox.generateMcpConfig'
-            ),
-            new BuildTreeItem(
-                '  Generate Fyers Launch Config',
-                'Generate launch.json for Fyers App',
-                vscode.TreeItemCollapsibleState.None,
-                'mcpAction',
-                new vscode.ThemeIcon('debug-alt', new vscode.ThemeColor('charts.blue')),
-                'flutter-toolbox.generateFyersLaunchConfig'
-            ),
+            // new BuildTreeItem(
+            //     '  Generate FYERS UI MCP Config',
+            //     'Generate MCP configuration for fy_ui library',
+            //     vscode.TreeItemCollapsibleState.None,
+            //     'mcpAction',
+            //     new vscode.ThemeIcon('json', new vscode.ThemeColor('charts.purple')),
+            //     'flutter-toolbox.generateMcpConfig'
+            // ),
+            // new BuildTreeItem(
+            //     '  Generate Fyers Launch Config',
+            //     'Generate launch.json for Fyers App',
+            //     vscode.TreeItemCollapsibleState.None,
+            //     'mcpAction',
+            //     new vscode.ThemeIcon('debug-alt', new vscode.ThemeColor('charts.blue')),
+            //     'flutter-toolbox.generateFyersLaunchConfig'
+            // ),
             new BuildTreeItem(
                 '  Add Flutter Cursor Rules',
                 'Add Flutter cursor rules to project',
@@ -755,7 +755,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                     `Targets: **${entry.targets.length}**` +
                     (entry.targets.length > 0
                         ? '\n\n' + entry.targets.slice(0, 8).map(t => `- \`make ${t.name}\``).join('\n') +
-                          (entry.targets.length > 8 ? `\n- _…and ${entry.targets.length - 8} more_` : '')
+                        (entry.targets.length > 8 ? `\n- _…and ${entry.targets.length - 8} more_` : '')
                         : '') +
                     '\n\n_Click the ↻ icon to reload targets after editing this file_',
                     true
@@ -799,7 +799,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
             label,
             description,
             vscode.TreeItemCollapsibleState.Expanded,
-            'buildSession',
+            isActive ? 'buildSession' : 'buildSessionDone',
             icon
         );
 
@@ -815,6 +815,8 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 return new vscode.ThemeIcon('check', new vscode.ThemeColor('charts.green'));
             case SessionStatus.Failed:
                 return new vscode.ThemeIcon('error', new vscode.ThemeColor('charts.red'));
+            case SessionStatus.Cancelled:
+                return new vscode.ThemeIcon('circle-slash', new vscode.ThemeColor('charts.orange'));
             default:
                 return new vscode.ThemeIcon('circle-outline');
         }
@@ -830,7 +832,7 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
 
     private getSessionSteps(sessionId: string): BuildTreeItem[] {
         const session = this.activeSessions.get(sessionId) ||
-                       this.recentSessions.find(s => s.id === sessionId);
+            this.recentSessions.find(s => s.id === sessionId);
 
         if (!session) {
             return [];

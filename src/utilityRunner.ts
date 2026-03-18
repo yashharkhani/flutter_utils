@@ -2,18 +2,16 @@
  * Utility Runner - Executes utility commands and manages their state
  */
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec, spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { BuildTreeProvider } from './buildTreeView';
 import { BuildSession, BuildStep, CommandStatus, SessionStatus, SessionType } from './types';
-
-const execAsync = promisify(exec);
 
 export class UtilityRunner {
     private outputChannel: vscode.OutputChannel;
     private statusBarItem: vscode.StatusBarItem;
     private treeProvider?: BuildTreeProvider;
+    private abortControllers: Map<string, AbortController> = new Map();
 
     constructor(treeProvider?: BuildTreeProvider) {
         this.outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
@@ -23,6 +21,17 @@ export class UtilityRunner {
 
     setTreeProvider(treeProvider: BuildTreeProvider): void {
         this.treeProvider = treeProvider;
+    }
+
+    /**
+     * Stop a running session by aborting its current command
+     */
+    stopSession(sessionId: string): void {
+        const controller = this.abortControllers.get(sessionId);
+        if (controller) {
+            controller.abort();
+            this.abortControllers.delete(sessionId);
+        }
     }
 
     /**
@@ -41,61 +50,43 @@ export class UtilityRunner {
         this.statusBarItem.text = '$(sync~spin) Checking Flutter version...';
         this.statusBarItem.show();
 
-        try {
+        return new Promise((resolve) => {
             const versionCommand = `${flutterCommand} --version`;
             this.log(`${'─'.repeat(60)}`);
             this.log(`Command: ${versionCommand}`);
             this.log(`${'─'.repeat(60)}\n`);
 
-            const { stdout, stderr } = await execAsync(versionCommand, {
-                cwd: workspaceFolder,
-                maxBuffer: 10 * 1024 * 1024
+            exec(versionCommand, { cwd: workspaceFolder, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+                if (stdout) { this.log(stdout.trim()); }
+                if (stderr && stderr.trim()) { this.log('\nAdditional Info:'); this.log(stderr.trim()); }
+
+                if (error) {
+                    this.log(`\n❌ Error getting Flutter version`);
+                    if (error.message) { this.log(`Error: ${error.message}`); }
+
+                    this.statusBarItem.text = '$(error) Version Check Failed';
+                    this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+
+                    vscode.window.showErrorMessage('Failed to get Flutter version. Check output for details.');
+
+                    setTimeout(() => { this.statusBarItem.hide(); }, 5000);
+                    resolve(false);
+                    return;
+                }
+
+                this.log(`\n${'='.repeat(60)}`);
+                this.log(`✅ Flutter version retrieved successfully`);
+                this.log(`${'='.repeat(60)}\n`);
+
+                this.statusBarItem.text = '$(check) Flutter Version Retrieved';
+                this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+
+                vscode.window.showInformationMessage('Flutter version retrieved successfully!');
+
+                setTimeout(() => { this.statusBarItem.hide(); }, 3000);
+                resolve(true);
             });
-
-            if (stdout) {
-                this.log(stdout.trim());
-            }
-
-            if (stderr && stderr.trim()) {
-                this.log('\nAdditional Info:');
-                this.log(stderr.trim());
-            }
-
-            this.log(`\n${'='.repeat(60)}`);
-            this.log(`✅ Flutter version retrieved successfully`);
-            this.log(`${'='.repeat(60)}\n`);
-
-            this.statusBarItem.text = '$(check) Flutter Version Retrieved';
-            this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
-
-            vscode.window.showInformationMessage('Flutter version retrieved successfully!');
-
-            setTimeout(() => {
-                this.statusBarItem.hide();
-            }, 3000);
-
-            return true;
-
-        } catch (error: any) {
-            this.log(`\n❌ Error getting Flutter version`);
-            if (error.message) {
-                this.log(`Error: ${error.message}`);
-            }
-            if (error.stderr) {
-                this.log(`Details: ${error.stderr}`);
-            }
-
-            this.statusBarItem.text = '$(error) Version Check Failed';
-            this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-
-            vscode.window.showErrorMessage('Failed to get Flutter version. Check output for details.');
-
-            setTimeout(() => {
-                this.statusBarItem.hide();
-            }, 5000);
-
-            return false;
-        }
+        });
     }
 
     /**
@@ -389,10 +380,19 @@ export class UtilityRunner {
             this.treeProvider.startBuildSession(session);
         }
 
+        // Create an AbortController for this session so it can be stopped
+        const abortController = new AbortController();
+        this.abortControllers.set(sessionId, abortController);
+
         let stepIndex = 0;
         const totalSteps = steps.length;
 
         for (const step of steps) {
+            // Bail out early if already aborted before this step starts
+            if (abortController.signal.aborted) {
+                break;
+            }
+
             const command = step.command.replace('{FLUTTER_CMD}', flutterCommand);
 
             this.log(`${'─'.repeat(60)}`);
@@ -410,10 +410,32 @@ export class UtilityRunner {
             this.statusBarItem.show();
 
             // Execute command
-            const success = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex);
+            const result = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex, abortController.signal);
 
-            if (!success) {
+            if (result === 'cancelled') {
+                // User stopped the session
+                this.abortControllers.delete(sessionId);
+                if (this.treeProvider) {
+                    this.treeProvider.completeBuildSession(sessionId, SessionStatus.Cancelled);
+                }
+
+                this.log(`\n${'='.repeat(60)}`);
+                this.log(`🛑 ${utilityName} stopped by user.`);
+                this.log(`${'='.repeat(60)}\n`);
+
+                this.statusBarItem.text = `$(stop-circle) ${utilityName} Stopped`;
+                this.statusBarItem.backgroundColor = undefined;
+
+                setTimeout(() => {
+                    this.statusBarItem.hide();
+                }, 3000);
+
+                return false;
+            }
+
+            if (!result) {
                 // Update to failed
+                this.abortControllers.delete(sessionId);
                 if (this.treeProvider) {
                     this.treeProvider.completeBuildSession(sessionId, SessionStatus.Failed);
                 }
@@ -434,6 +456,7 @@ export class UtilityRunner {
         }
 
         // Completed successfully
+        this.abortControllers.delete(sessionId);
         if (this.treeProvider) {
             this.treeProvider.completeBuildSession(sessionId, SessionStatus.Completed);
         }
@@ -455,118 +478,128 @@ export class UtilityRunner {
     }
 
     /**
-     * Execute a single command
+     * Execute a single command. Returns true on success, false on failure, 'cancelled' when aborted.
+     * Uses spawn with detached:true so we can kill the entire process group instantly (SIGKILL).
      */
-    private async executeCommand(
+    private executeCommand(
         command: string,
         cwd: string,
         step: BuildStep,
         sessionId: string,
-        stepIndex: number
-    ): Promise<boolean> {
+        stepIndex: number,
+        signal: AbortSignal
+    ): Promise<boolean | 'cancelled'> {
         this.log(`⏳ Status: In Progress\n`);
 
-        try {
-            const { stdout, stderr } = await execAsync(command, {
+        return new Promise((resolve) => {
+            let stdoutBuf = '';
+            let stderrBuf = '';
+
+            // detached: true → child gets its own process group so we can kill the whole tree
+            const child = spawn(command, [], {
                 cwd,
-                maxBuffer: 10 * 1024 * 1024 // 10MB buffer
+                shell: true,
+                detached: true,
+                stdio: ['ignore', 'pipe', 'pipe']
             });
 
-            if (stdout) {
-                this.log('Output:');
-                this.log(stdout);
-            }
+            child.stdout?.on('data', (data: Buffer) => { stdoutBuf += data.toString(); });
+            child.stderr?.on('data', (data: Buffer) => { stderrBuf += data.toString(); });
 
-            if (stderr && stderr.trim()) {
-                this.log('Warnings/Info:');
-                this.log(stderr);
-            }
+            this.log(`🔍 PID: ${child.pid}\n`);
 
-            this.log(`✅ Status: Success\n`);
+            // Kill the whole process group the moment abort fires
+            const killGroup = () => {
+                try {
+                    if (child.pid !== undefined) {
+                        process.kill(-child.pid, 'SIGKILL');
+                    }
+                } catch { /* already dead */ }
+            };
+            signal.addEventListener('abort', killGroup, { once: true });
 
-            // Update step to success
-            if (this.treeProvider) {
-                this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Success);
-            }
+            child.on('close', (code) => {
+                signal.removeEventListener('abort', killGroup);
 
-            return true;
+                if (signal.aborted) {
+                    this.log(`🛑 Status: Stopped\n`);
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, 'Stopped by user');
+                    }
+                    resolve('cancelled');
+                    return;
+                }
 
-        } catch (error: any) {
-            this.log(`❌ Status: Failed\n`);
-            this.log(`${'▼'.repeat(60)}`);
-            this.log('ERROR DETAILS:');
-            this.log(`${'▼'.repeat(60)}`);
+                if (code !== 0) {
+                    this.log(`❌ Status: Failed\n`);
+                    this.log(`${'▼'.repeat(60)}`);
+                    this.log('ERROR DETAILS:');
+                    this.log(`${'▼'.repeat(60)}`);
 
-            let errorMessage = '';
+                    let errorMessage = '';
+                    if (stdoutBuf) { this.log('Standard Output:'); this.log(stdoutBuf); errorMessage += stdoutBuf; }
+                    if (stderrBuf) { this.log('Error Output:'); this.log(stderrBuf); errorMessage += '\n' + stderrBuf; }
 
-            if (error.stdout) {
-                this.log('Standard Output:');
-                this.log(error.stdout);
-                errorMessage += error.stdout;
-            }
+                    this.log(`${'▲'.repeat(60)}\n`);
 
-            if (error.stderr) {
-                this.log('Error Output:');
-                this.log(error.stderr);
-                errorMessage += '\n' + error.stderr;
-            }
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, errorMessage);
+                    }
+                    resolve(false);
+                    return;
+                }
 
-            if (error.message) {
-                this.log('Error Message:');
-                this.log(error.message);
-                errorMessage += '\n' + error.message;
-            }
+                if (stdoutBuf) { this.log('Output:'); this.log(stdoutBuf); }
+                if (stderrBuf && stderrBuf.trim()) { this.log('Warnings/Info:'); this.log(stderrBuf); }
+                this.log(`✅ Status: Success\n`);
 
-            this.log(`${'▲'.repeat(60)}\n`);
+                if (this.treeProvider) {
+                    this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Success);
+                }
+                resolve(true);
+            });
 
-            // Update step to failed with error (store full error message)
-            if (this.treeProvider) {
-                this.treeProvider.updateStepStatus(
-                    sessionId,
-                    stepIndex,
-                    CommandStatus.Failed,
-                    errorMessage
-                );
-            }
-
-            return false;
-        }
+            child.on('error', (err) => {
+                signal.removeEventListener('abort', killGroup);
+                if (signal.aborted) {
+                    this.log(`🛑 Status: Stopped\n`);
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, 'Stopped by user');
+                    }
+                    resolve('cancelled');
+                } else {
+                    this.log(`❌ Status: Failed\n`);
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, err.message);
+                    }
+                    resolve(false);
+                }
+            });
+        });
     }
 
     /**
      * Show Flutter version
      */
-    private async showFlutterVersion(workspaceFolder: string, flutterCommand: string): Promise<void> {
+    private showFlutterVersion(workspaceFolder: string, flutterCommand: string): Promise<void> {
         this.log(`${'─'.repeat(60)}`);
         this.log(`Flutter Version Check`);
         this.log(`${'─'.repeat(60)}`);
 
-        try {
+        return new Promise((resolve) => {
             const versionCommand = `${flutterCommand} --version`;
             this.log(`Command: ${versionCommand}\n`);
-
-            const { stdout, stderr } = await execAsync(versionCommand, {
-                cwd: workspaceFolder,
-                maxBuffer: 10 * 1024 * 1024
+            exec(versionCommand, { cwd: workspaceFolder, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+                if (stdout) { this.log(stdout.trim()); }
+                if (stderr && stderr.trim()) { this.log(stderr.trim()); }
+                if (error) {
+                    this.log(`⚠️  Warning: Could not get Flutter version`);
+                    if (error.message) { this.log(`Error: ${error.message}`); }
+                }
+                this.log(`\n${'─'.repeat(60)}\n`);
+                resolve();
             });
-
-            if (stdout) {
-                this.log(stdout.trim());
-            }
-
-            if (stderr && stderr.trim()) {
-                this.log(stderr.trim());
-            }
-
-            this.log(`\n${'─'.repeat(60)}\n`);
-
-        } catch (error: any) {
-            this.log(`⚠️  Warning: Could not get Flutter version`);
-            if (error.message) {
-                this.log(`Error: ${error.message}`);
-            }
-            this.log(`${'─'.repeat(60)}\n`);
-        }
+        });
     }
 
     /**

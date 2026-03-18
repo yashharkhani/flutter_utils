@@ -2,23 +2,32 @@
  * Build Runner - Executes build commands and manages their state
  */
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import { BuildTreeProvider } from './buildTreeView';
 import { BuildConfig, BuildSession, BuildStep, BuildType, CommandStatus, SessionStatus, SessionType } from './types';
-
-const execAsync = promisify(exec);
 
 export class BuildRunner {
     private outputChannel: vscode.OutputChannel;
     private statusBarItem: vscode.StatusBarItem;
     private treeProvider?: BuildTreeProvider;
+    private abortControllers: Map<string, AbortController> = new Map();
 
     constructor(treeProvider?: BuildTreeProvider) {
         this.outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
         this.treeProvider = treeProvider;
+    }
+
+    /**
+     * Stop a running session by aborting its current command
+     */
+    stopSession(sessionId: string): void {
+        const controller = this.abortControllers.get(sessionId);
+        if (controller) {
+            controller.abort();
+            this.abortControllers.delete(sessionId);
+        }
     }
 
     /**
@@ -74,10 +83,19 @@ export class BuildRunner {
             this.treeProvider.startBuildSession(session);
         }
 
+        // Create an AbortController for this session so it can be stopped
+        const abortController = new AbortController();
+        this.abortControllers.set(sessionId, abortController);
+
         let stepIndex = 0;
         const totalSteps = steps.length;
 
         for (const step of steps) {
+            // Bail out early if already aborted before this step starts
+            if (abortController.signal.aborted) {
+                break;
+            }
+
             // Skip optional steps if needed
             if (step.optional && step.id === 'delete-pubspec-lock' && skipPubspecLockDeletion) {
                 this.log(`⏭️  Skipping: ${step.description}\n`);
@@ -102,10 +120,32 @@ export class BuildRunner {
             this.statusBarItem.show();
 
             // Execute command
-            const success = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex);
+            const result = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex, abortController.signal);
 
-            if (!success) {
+            if (result === 'cancelled') {
+                // User stopped the session
+                this.abortControllers.delete(sessionId);
+                if (this.treeProvider) {
+                    this.treeProvider.completeBuildSession(sessionId, SessionStatus.Cancelled);
+                }
+
+                this.log(`\n${'='.repeat(60)}`);
+                this.log(`🛑 Build stopped by user.`);
+                this.log(`${'='.repeat(60)}\n`);
+
+                this.statusBarItem.text = `$(stop-circle) Build Stopped`;
+                this.statusBarItem.backgroundColor = undefined;
+
+                setTimeout(() => {
+                    this.statusBarItem.hide();
+                }, 3000);
+
+                return false;
+            }
+
+            if (!result) {
                 // Update step to failed
+                this.abortControllers.delete(sessionId);
                 if (this.treeProvider) {
                     this.treeProvider.completeBuildSession(sessionId, SessionStatus.Failed);
                 }
@@ -128,6 +168,7 @@ export class BuildRunner {
         }
 
         // Build completed successfully
+        this.abortControllers.delete(sessionId);
         if (this.treeProvider) {
             this.treeProvider.completeBuildSession(sessionId, SessionStatus.Completed);
         }
@@ -149,82 +190,104 @@ export class BuildRunner {
     }
 
     /**
-     * Execute a single command
+     * Execute a single command. Returns true on success, false on failure, 'cancelled' when aborted.
+     * Uses spawn with detached:true so we can kill the entire process group instantly (SIGKILL).
      */
-    private async executeCommand(
+    private executeCommand(
         command: string,
         cwd: string,
         step: BuildStep,
         sessionId: string,
-        stepIndex: number
-    ): Promise<boolean> {
+        stepIndex: number,
+        signal: AbortSignal
+    ): Promise<boolean | 'cancelled'> {
         this.log(`⏳ Status: In Progress\n`);
 
-        try {
-            const { stdout, stderr } = await execAsync(command, {
+        return new Promise((resolve) => {
+            let stdoutBuf = '';
+            let stderrBuf = '';
+
+            // detached: true → child gets its own process group so we can kill the whole tree
+            const child = spawn(command, [], {
                 cwd,
-                maxBuffer: 10 * 1024 * 1024 // 10MB buffer
+                shell: true,
+                detached: true,
+                stdio: ['ignore', 'pipe', 'pipe']
             });
 
-            if (stdout) {
-                this.log('Output:');
-                this.log(stdout);
-            }
+            child.stdout?.on('data', (data: Buffer) => { stdoutBuf += data.toString(); });
+            child.stderr?.on('data', (data: Buffer) => { stderrBuf += data.toString(); });
 
-            if (stderr && stderr.trim()) {
-                this.log('Warnings/Info:');
-                this.log(stderr);
-            }
+            this.log(`🔍 PID: ${child.pid}\n`);
 
-            this.log(`✅ Status: Success\n`);
+            // Kill the whole process group the moment abort fires
+            const killGroup = () => {
+                try {
+                    if (child.pid !== undefined) {
+                        process.kill(-child.pid, 'SIGKILL');
+                    }
+                } catch { /* already dead */ }
+            };
+            signal.addEventListener('abort', killGroup, { once: true });
 
-            // Update step to success
-            if (this.treeProvider) {
-                this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Success);
-            }
+            child.on('close', (code) => {
+                signal.removeEventListener('abort', killGroup);
 
-            return true;
+                if (signal.aborted) {
+                    this.log(`🛑 Status: Stopped\n`);
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, 'Stopped by user');
+                    }
+                    resolve('cancelled');
+                    return;
+                }
 
-        } catch (error: any) {
-            this.log(`❌ Status: Failed\n`);
-            this.log(`${'▼'.repeat(60)}`);
-            this.log('ERROR DETAILS:');
-            this.log(`${'▼'.repeat(60)}`);
+                if (code !== 0) {
+                    this.log(`❌ Status: Failed\n`);
+                    this.log(`${'▼'.repeat(60)}`);
+                    this.log('ERROR DETAILS:');
+                    this.log(`${'▼'.repeat(60)}`);
 
-            let errorMessage = '';
+                    let errorMessage = '';
+                    if (stdoutBuf) { this.log('Standard Output:'); this.log(stdoutBuf); errorMessage += stdoutBuf; }
+                    if (stderrBuf) { this.log('Error Output:'); this.log(stderrBuf); errorMessage += '\n' + stderrBuf; }
 
-            if (error.stdout) {
-                this.log('Standard Output:');
-                this.log(error.stdout);
-                errorMessage += error.stdout;
-            }
+                    this.log(`${'▲'.repeat(60)}\n`);
 
-            if (error.stderr) {
-                this.log('Error Output:');
-                this.log(error.stderr);
-                errorMessage += '\n' + error.stderr;
-            }
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, errorMessage);
+                    }
+                    resolve(false);
+                    return;
+                }
 
-            if (error.message) {
-                this.log('Error Message:');
-                this.log(error.message);
-                errorMessage += '\n' + error.message;
-            }
+                if (stdoutBuf) { this.log('Output:'); this.log(stdoutBuf); }
+                if (stderrBuf && stderrBuf.trim()) { this.log('Warnings/Info:'); this.log(stderrBuf); }
+                this.log(`✅ Status: Success\n`);
 
-            this.log(`${'▲'.repeat(60)}\n`);
+                if (this.treeProvider) {
+                    this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Success);
+                }
+                resolve(true);
+            });
 
-            // Update step to failed with error (store full error message)
-            if (this.treeProvider) {
-                this.treeProvider.updateStepStatus(
-                    sessionId,
-                    stepIndex,
-                    CommandStatus.Failed,
-                    errorMessage
-                );
-            }
-
-            return false;
-        }
+            child.on('error', (err) => {
+                signal.removeEventListener('abort', killGroup);
+                if (signal.aborted) {
+                    this.log(`🛑 Status: Stopped\n`);
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, 'Stopped by user');
+                    }
+                    resolve('cancelled');
+                } else {
+                    this.log(`❌ Status: Failed\n`);
+                    if (this.treeProvider) {
+                        this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Failed, err.message);
+                    }
+                    resolve(false);
+                }
+            });
+        });
     }
 
     /**
@@ -246,37 +309,32 @@ export class BuildRunner {
     /**
      * Show Flutter version
      */
-    private async showFlutterVersion(workspaceFolder: string, flutterCommand: string): Promise<void> {
+    private showFlutterVersion(workspaceFolder: string, flutterCommand: string): Promise<void> {
         this.log(`${'─'.repeat(60)}`);
         this.log(`Flutter Version Check`);
         this.log(`${'─'.repeat(60)}`);
 
-        try {
+        return new Promise((resolve) => {
             const versionCommand = `${flutterCommand} --version`;
             this.log(`Command: ${versionCommand}\n`);
 
-            const { stdout, stderr } = await execAsync(versionCommand, {
-                cwd: workspaceFolder,
-                maxBuffer: 10 * 1024 * 1024
+            let out = '';
+            let err = '';
+            const child = spawn(versionCommand, [], { cwd: workspaceFolder, shell: true, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+            child.stdout?.on('data', (d: Buffer) => { out += d; });
+            child.stderr?.on('data', (d: Buffer) => { err += d; });
+            child.on('close', () => {
+                if (out) { this.log(out.trim()); }
+                if (err && err.trim()) { this.log(err.trim()); }
+                this.log(`\n${'─'.repeat(60)}\n`);
+                resolve();
             });
-
-            if (stdout) {
-                this.log(stdout.trim());
-            }
-
-            if (stderr && stderr.trim()) {
-                this.log(stderr.trim());
-            }
-
-            this.log(`\n${'─'.repeat(60)}\n`);
-
-        } catch (error: any) {
-            this.log(`⚠️  Warning: Could not get Flutter version`);
-            if (error.message) {
-                this.log(`Error: ${error.message}`);
-            }
-            this.log(`${'─'.repeat(60)}\n`);
-        }
+            child.on('error', () => {
+                this.log(`⚠️  Warning: Could not get Flutter version`);
+                this.log(`${'─'.repeat(60)}\n`);
+                resolve();
+            });
+        });
     }
 
     /**

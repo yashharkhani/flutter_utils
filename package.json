@@ -2,7 +2,7 @@
   "name": "flutter-toolbox",
   "displayName": "flutter-toolbox",
   "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), custom commands, and MCP config generators. Real-time status tracking in sidebar.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "skalex",
   "engines": {
     "vscode": "^1.85.0"
@@ -260,6 +260,11 @@
         "command": "flutter-toolbox.removeAiToolPath",
         "title": "AI Tools: Remove Custom Path",
         "icon": "$(trash)"
+      },
+      {
+        "command": "flutter-toolbox.stopSession",
+        "title": "Stop Task",
+        "icon": "$(stop-circle)"
       }
     ],
     "menus": {
@@ -310,6 +315,11 @@
           "command": "flutter-toolbox.removeAiToolPath",
           "when": "view == aiToolsView && viewItem == aiToolGroup",
           "group": "remove"
+        },
+        {
+          "command": "flutter-toolbox.stopSession",
+          "when": "view == flutterToolboxView && viewItem == buildSession",
+          "group": "inline"
         }
       ]
     },
