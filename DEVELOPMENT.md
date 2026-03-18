@@ -34,6 +34,10 @@ This will:
 - Open a new VS Code window with your extension loaded
 - Enable debugging with breakpoints
 
+**Where the extension runs:** The *new* window that opens is the **Extension Development Host** (title often shows "[Extension Development Host]"). That window is where the extension is active. Your original window is the dev workspace (this repo). Open a Flutter project in the new window to use the extension.
+
+**Seeing code changes:** After editing `src/` and recompiling (`npm run compile` or the watch task), reload the Extension Development Host: **Cmd+Shift+P** / **Ctrl+Shift+P** → **Developer: Reload Window**. Or press **F5** again to relaunch with a fresh host.
+
 #### Option B: Using Command Palette
 
 1. Open this project in VS Code

@@ -95,6 +95,21 @@ export function activate(context: vscode.ExtensionContext) {
         () => handleUtilityCommand('cleanAndPubGet')
     );
 
+    const pubGetAllInFolderCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.pubGetAllInFolder',
+        () => handlePubGetAllInFolder()
+    );
+
+    const cleanAndPubGetAllInFolderCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.cleanAndPubGetAllInFolder',
+        () => handleCleanAndPubGetAllInFolder()
+    );
+
+    const gitPullAllInFolderCommand = vscode.commands.registerCommand(
+        'flutter-build-utils.gitPullAllInFolder',
+        () => handleGitPullAllInFolder()
+    );
+
     const podInstallCommand = vscode.commands.registerCommand(
         'flutter-build-utils.podInstall',
         () => handleUtilityCommand('podInstall')
@@ -212,6 +227,8 @@ export function activate(context: vscode.ExtensionContext) {
         cleanCommand,
         pubGetCommand,
         cleanAndPubGetCommand,
+        pubGetAllInFolderCommand,
+        cleanAndPubGetAllInFolderCommand,
         podInstallCommand,
         generateMcpConfigCommand,
         generateFyersLaunchConfigCommand,
@@ -229,6 +246,7 @@ export function activate(context: vscode.ExtensionContext) {
         addFlutterCursorRulesCommand,
         gitPushCommand,
         gitPullCommand,
+        gitPullAllInFolderCommand,
         treeView,
         buildRunner,
         utilityRunner
@@ -504,6 +522,333 @@ async function handleUtilityCommand(utilType: 'flutterVersion' | 'buildRunner' |
 
     } catch (error: any) {
         vscode.window.showErrorMessage(`Utility command error: ${error.message}`);
+    }
+}
+
+/**
+ * Run pub get in all direct child folders that contain pubspec.yaml
+ */
+async function handlePubGetAllInFolder(): Promise<void> {
+    try {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const activeEditor = vscode.window.activeTextEditor;
+        const defaultPath =
+            (workspaceFolders && workspaceFolders.length > 0 && workspaceFolders[0].uri.fsPath) ||
+            (activeEditor ? path.dirname(activeEditor.document.uri.fsPath) : '');
+
+        const parentPathInput = await vscode.window.showInputBox({
+            prompt: 'Enter folder path containing Flutter packages (pub get runs in each direct child with pubspec.yaml)',
+            placeHolder: '/Users/yourname/projects/packages',
+            value: defaultPath || undefined,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Path cannot be empty';
+                }
+                const normalized = value.trim().replace(/\/$/, '');
+                if (!fs.existsSync(normalized)) {
+                    return 'Path does not exist. Please enter a valid path.';
+                }
+                if (!fs.statSync(normalized).isDirectory()) {
+                    return 'Path is not a directory.';
+                }
+                return null;
+            }
+        });
+
+        if (!parentPathInput) {
+            return;
+        }
+
+        const parentPath = parentPathInput.trim().replace(/\/$/, '');
+        const entries = fs.readdirSync(parentPath, { withFileTypes: true });
+        const packagePaths: string[] = [];
+
+        for (const dirent of entries) {
+            if (!dirent.isDirectory()) {
+                continue;
+            }
+            const childPath = path.join(parentPath, dirent.name);
+            const pubspecPath = path.join(childPath, 'pubspec.yaml');
+            if (fs.existsSync(pubspecPath)) {
+                packagePaths.push(childPath);
+            }
+        }
+
+        packagePaths.sort();
+
+        if (packagePaths.length === 0) {
+            vscode.window.showErrorMessage('No Flutter packages found in direct children.');
+            return;
+        }
+
+        const flutterCommand = getFlutterCommand();
+        const succeededNames: string[] = [];
+        const failedNames: string[] = [];
+
+        for (const projectPath of packagePaths) {
+            const name = path.basename(projectPath);
+            const ok = await utilityRunner.executePubGet(projectPath, flutterCommand);
+            if (ok) {
+                succeededNames.push(name);
+            } else {
+                failedNames.push(name);
+            }
+        }
+
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Pub get (all in folder) — Summary');
+        outputChannel.appendLine('='.repeat(60));
+        outputChannel.appendLine(`Parent folder: ${parentPath}`);
+        outputChannel.appendLine(`Packages run: ${packagePaths.length}`);
+        outputChannel.appendLine('');
+        for (const name of succeededNames) {
+            outputChannel.appendLine(`  ✓ ${name}`);
+        }
+        for (const name of failedNames) {
+            outputChannel.appendLine(`  ✗ ${name}`);
+        }
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`Result: ${succeededNames.length} succeeded, ${failedNames.length} failed.`);
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.show(true);
+
+        vscode.window.showInformationMessage(
+            `Pub get (all in folder): ${succeededNames.length} succeeded, ${failedNames.length} failed. See Output for details.`
+        );
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Pub get all in folder failed: ${error.message}`);
+    }
+}
+
+/**
+ * Run clean and pub get in all direct child folders that contain pubspec.yaml
+ */
+async function handleCleanAndPubGetAllInFolder(): Promise<void> {
+    try {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const activeEditor = vscode.window.activeTextEditor;
+        const defaultPath =
+            (workspaceFolders && workspaceFolders.length > 0 && workspaceFolders[0].uri.fsPath) ||
+            (activeEditor ? path.dirname(activeEditor.document.uri.fsPath) : '');
+
+        const parentPathInput = await vscode.window.showInputBox({
+            prompt: 'Enter folder path containing Flutter packages (clean & pub get in each direct child with pubspec.yaml)',
+            placeHolder: '/Users/yourname/projects/packages',
+            value: defaultPath || undefined,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Path cannot be empty';
+                }
+                const normalized = value.trim().replace(/\/$/, '');
+                if (!fs.existsSync(normalized)) {
+                    return 'Path does not exist. Please enter a valid path.';
+                }
+                if (!fs.statSync(normalized).isDirectory()) {
+                    return 'Path is not a directory.';
+                }
+                return null;
+            }
+        });
+
+        if (!parentPathInput) {
+            return;
+        }
+
+        const parentPath = parentPathInput.trim().replace(/\/$/, '');
+        const entries = fs.readdirSync(parentPath, { withFileTypes: true });
+        const packagePaths: string[] = [];
+
+        for (const dirent of entries) {
+            if (!dirent.isDirectory()) {
+                continue;
+            }
+            const childPath = path.join(parentPath, dirent.name);
+            const pubspecPath = path.join(childPath, 'pubspec.yaml');
+            if (fs.existsSync(pubspecPath)) {
+                packagePaths.push(childPath);
+            }
+        }
+
+        packagePaths.sort();
+
+        if (packagePaths.length === 0) {
+            vscode.window.showErrorMessage('No Flutter packages found in direct children.');
+            return;
+        }
+
+        const deleteLockChoice = await vscode.window.showQuickPick(
+            [
+                { label: 'Yes', description: 'Delete pubspec.lock before clean & pub get in each package', value: true },
+                { label: 'No', description: 'Keep pubspec.lock', value: false }
+            ],
+            {
+                placeHolder: 'Delete pubspec.lock in each package?',
+                ignoreFocusOut: true
+            }
+        );
+
+        if (deleteLockChoice === undefined) {
+            return;
+        }
+
+        const flutterCommand = getFlutterCommand();
+        const succeededNames: string[] = [];
+        const failedNames: string[] = [];
+
+        for (const projectPath of packagePaths) {
+            const name = path.basename(projectPath);
+            const ok = await utilityRunner.executeCleanAndPubGet(
+                projectPath,
+                flutterCommand,
+                deleteLockChoice.value
+            );
+            if (ok) {
+                succeededNames.push(name);
+            } else {
+                failedNames.push(name);
+            }
+        }
+
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Clean & Pub get (all in folder) — Summary');
+        outputChannel.appendLine('='.repeat(60));
+        outputChannel.appendLine(`Parent folder: ${parentPath}`);
+        outputChannel.appendLine(`Delete pubspec.lock: ${deleteLockChoice.value ? 'Yes' : 'No'}`);
+        outputChannel.appendLine(`Packages run: ${packagePaths.length}`);
+        outputChannel.appendLine('');
+        for (const name of succeededNames) {
+            outputChannel.appendLine(`  ✓ ${name}`);
+        }
+        for (const name of failedNames) {
+            outputChannel.appendLine(`  ✗ ${name}`);
+        }
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`Result: ${succeededNames.length} succeeded, ${failedNames.length} failed.`);
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.show(true);
+
+        vscode.window.showInformationMessage(
+            `Clean & Pub get (all in folder): ${succeededNames.length} succeeded, ${failedNames.length} failed. See Output for details.`
+        );
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Clean & Pub get all in folder failed: ${error.message}`);
+    }
+}
+
+/**
+ * Run git pull in all direct child folders that are git repositories
+ */
+async function handleGitPullAllInFolder(): Promise<void> {
+    try {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const activeEditor = vscode.window.activeTextEditor;
+        const defaultPath =
+            (workspaceFolders && workspaceFolders.length > 0 && workspaceFolders[0].uri.fsPath) ||
+            (activeEditor ? path.dirname(activeEditor.document.uri.fsPath) : '');
+
+        const parentPathInput = await vscode.window.showInputBox({
+            prompt: 'Enter folder path containing git repositories (pull runs in each direct child with .git)',
+            placeHolder: '/Users/yourname/projects',
+            value: defaultPath || undefined,
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim() === '') {
+                    return 'Path cannot be empty';
+                }
+                const normalized = value.trim().replace(/\/$/, '');
+                if (!fs.existsSync(normalized)) {
+                    return 'Path does not exist. Please enter a valid path.';
+                }
+                if (!fs.statSync(normalized).isDirectory()) {
+                    return 'Path is not a directory.';
+                }
+                return null;
+            }
+        });
+
+        if (!parentPathInput) {
+            return;
+        }
+
+        const parentPath = parentPathInput.trim().replace(/\/$/, '');
+        const entries = fs.readdirSync(parentPath, { withFileTypes: true });
+        const repoPaths: string[] = [];
+
+        for (const dirent of entries) {
+            if (!dirent.isDirectory()) {
+                continue;
+            }
+            const childPath = path.join(parentPath, dirent.name);
+            if (fs.existsSync(path.join(childPath, '.git'))) {
+                repoPaths.push(childPath);
+            }
+        }
+
+        repoPaths.sort();
+
+        if (repoPaths.length === 0) {
+            vscode.window.showErrorMessage('No git repositories found in direct children.');
+            return;
+        }
+
+        const flutterCommand = getFlutterCommand();
+        const succeededEntries: { name: string; branch: string }[] = [];
+        const failedEntries: { name: string; branch: string; error?: string }[] = [];
+        const skippedNames: string[] = [];
+
+        for (const projectPath of repoPaths) {
+            const name = path.basename(projectPath);
+            const branch = await getCurrentBranch(projectPath);
+            if (branch === null) {
+                skippedNames.push(name);
+                continue;
+            }
+            const result = await utilityRunner.executeGitPull(projectPath, branch, flutterCommand);
+            if (result.success) {
+                succeededEntries.push({ name, branch });
+            } else {
+                failedEntries.push({ name, branch, error: result.errorMessage });
+            }
+        }
+
+        const outputChannel = vscode.window.createOutputChannel('flutter-toolbox');
+        outputChannel.appendLine('\n' + '='.repeat(60));
+        outputChannel.appendLine('Git Pull (all in folder) — Summary');
+        outputChannel.appendLine('='.repeat(60));
+        outputChannel.appendLine(`Parent folder: ${parentPath}`);
+        outputChannel.appendLine(`Repos run: ${repoPaths.length}`);
+        outputChannel.appendLine('');
+        for (const e of succeededEntries) {
+            outputChannel.appendLine(`  ✓ ${e.name} (${e.branch})`);
+        }
+        for (const e of failedEntries) {
+            outputChannel.appendLine(`  ✗ ${e.name} (${e.branch})`);
+            if (e.error) {
+                const oneLine = e.error.replace(/\s+/g, ' ').trim();
+                const truncated = oneLine.length > 120 ? oneLine.substring(0, 120) + '...' : oneLine;
+                outputChannel.appendLine(`      ${truncated}`);
+            }
+        }
+        for (const name of skippedNames) {
+            outputChannel.appendLine(`  Skipped (no branch): ${name}`);
+        }
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`Result: ${succeededEntries.length} succeeded, ${failedEntries.length} failed, ${skippedNames.length} skipped.`);
+        if (failedEntries.length > 0) {
+            outputChannel.appendLine('Repos with merge conflicts or pull errors show as failed; resolve them manually.');
+        }
+        outputChannel.appendLine('='.repeat(60) + '\n');
+        outputChannel.show(true);
+
+        vscode.window.showInformationMessage(
+            `Git pull (all in folder): ${succeededEntries.length} succeeded, ${failedEntries.length} failed, ${skippedNames.length} skipped. See Output for details.`
+        );
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Git pull all in folder failed: ${error.message}`);
     }
 }
 

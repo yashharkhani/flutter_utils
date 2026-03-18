@@ -2,7 +2,7 @@
   "name": "flutter-build-utils",
   "displayName": "flutter-toolbox",
   "description": "Comprehensive Flutter development toolkit with build automation (APK, IPA, Web), utilities (Clean, Pub Get, Build Runner, Analyze, Format, Pod Install), and MCP config generators. Real-time status tracking in sidebar.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "skalex",
   "engines": {
     "vscode": "^1.85.0"
@@ -83,6 +83,16 @@
       {
         "command": "flutter-build-utils.cleanAndPubGet",
         "title": "Flutter: Clean & Pub Get",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "flutter-build-utils.pubGetAllInFolder",
+        "title": "Flutter: Pub Get (all in folder)",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "flutter-build-utils.cleanAndPubGetAllInFolder",
+        "title": "Flutter: Clean & Pub Get (all in folder)",
         "icon": "$(sync)"
       },
       {
@@ -183,6 +193,11 @@
       {
         "command": "flutter-build-utils.gitPull",
         "title": "Git: Pull from Branch",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "flutter-build-utils.gitPullAllInFolder",
+        "title": "Git: Pull (all in folder)",
         "icon": "$(arrow-down)"
       }
     ],

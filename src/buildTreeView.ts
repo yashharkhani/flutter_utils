@@ -253,6 +253,22 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'flutter-build-utils.cleanAndPubGet'
             ),
             new BuildTreeItem(
+                '  Pub Get (all in folder)',
+                'Run pub get in all direct child packages of a folder',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('folder', new vscode.ThemeColor('charts.green')),
+                'flutter-build-utils.pubGetAllInFolder'
+            ),
+            new BuildTreeItem(
+                '  Clean & Pub Get (all in folder)',
+                'Run clean and pub get in all direct child packages of a folder',
+                vscode.TreeItemCollapsibleState.None,
+                'utilAction',
+                new vscode.ThemeIcon('sync', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.cleanAndPubGetAllInFolder'
+            ),
+            new BuildTreeItem(
                 '  Pod Install',
                 'Clean and reinstall iOS pods',
                 vscode.TreeItemCollapsibleState.None,
@@ -397,6 +413,14 @@ export class BuildTreeProvider implements vscode.TreeDataProvider<BuildTreeItem>
                 'gitAction',
                 new vscode.ThemeIcon('arrow-down', new vscode.ThemeColor('charts.blue')),
                 'flutter-build-utils.gitPull'
+            ),
+            new BuildTreeItem(
+                '  Git Pull (all in folder)',
+                'Run git pull in all direct child git repositories of a folder',
+                vscode.TreeItemCollapsibleState.None,
+                'gitAction',
+                new vscode.ThemeIcon('arrow-down', new vscode.ThemeColor('charts.blue')),
+                'flutter-build-utils.gitPullAllInFolder'
             ),
             new BuildTreeItem(
                 '',

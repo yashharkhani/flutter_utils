@@ -115,7 +115,7 @@ export class UtilityRunner {
             flutterCommand, // Pass flutter command for version check
             'Build Runner',
             steps
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -135,7 +135,7 @@ export class UtilityRunner {
             flutterCommand,
             'Flutter Analyze',
             steps
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -155,7 +155,7 @@ export class UtilityRunner {
             flutterCommand, // For version check
             'Dart Format',
             steps
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -167,7 +167,7 @@ export class UtilityRunner {
             flutterCommand,
             'Clean',
             [{ id: 'clean', description: 'Clean project', command: '{FLUTTER_CMD} clean' }]
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -179,7 +179,7 @@ export class UtilityRunner {
             flutterCommand,
             'Pub Get',
             [{ id: 'pub-get', description: 'Get dependencies', command: '{FLUTTER_CMD} pub get' }]
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -218,7 +218,7 @@ export class UtilityRunner {
             flutterCommand,
             'Clean & Pub Get',
             steps
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -238,13 +238,17 @@ export class UtilityRunner {
             flutterCommand,
             `Git Push (${branchName})`,
             steps
-        );
+        ).then(r => r.success);
     }
 
     /**
-     * Execute git pull
+     * Execute git pull. Returns success and optional error message for use in batch summaries.
      */
-    async executeGitPull(workspaceFolder: string, branchName: string, flutterCommand: string): Promise<boolean> {
+    async executeGitPull(
+        workspaceFolder: string,
+        branchName: string,
+        flutterCommand: string
+    ): Promise<{ success: boolean; errorMessage?: string }> {
         const steps: BuildStep[] = [
             {
                 id: 'git-pull',
@@ -303,7 +307,7 @@ export class UtilityRunner {
             flutterCommand, // Pass flutter command for version check
             'Pod Install',
             steps
-        );
+        ).then(r => r.success);
     }
 
     /**
@@ -314,7 +318,7 @@ export class UtilityRunner {
         flutterCommand: string,
         utilityName: string,
         steps: BuildStep[]
-    ): Promise<boolean> {
+    ): Promise<{ success: boolean; errorMessage?: string }> {
         this.outputChannel.clear();
         this.outputChannel.show(true);
 
@@ -368,9 +372,9 @@ export class UtilityRunner {
             this.statusBarItem.show();
 
             // Execute command
-            const success = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex);
+            const stepResult = await this.executeCommand(command, workspaceFolder, step, sessionId, stepIndex);
 
-            if (!success) {
+            if (!stepResult.success) {
                 // Update to failed
                 if (this.treeProvider) {
                     this.treeProvider.completeBuildSession(sessionId, SessionStatus.Failed);
@@ -385,7 +389,7 @@ export class UtilityRunner {
                     this.statusBarItem.hide();
                 }, 5000);
 
-                return false;
+                return { success: false, errorMessage: stepResult.errorMessage };
             }
 
             stepIndex++;
@@ -409,7 +413,7 @@ export class UtilityRunner {
             this.statusBarItem.hide();
         }, 5000);
 
-        return true;
+        return { success: true };
     }
 
     /**
@@ -421,7 +425,7 @@ export class UtilityRunner {
         step: BuildStep,
         sessionId: string,
         stepIndex: number
-    ): Promise<boolean> {
+    ): Promise<{ success: boolean; errorMessage?: string }> {
         this.log(`⏳ Status: In Progress\n`);
 
         try {
@@ -447,7 +451,7 @@ export class UtilityRunner {
                 this.treeProvider.updateStepStatus(sessionId, stepIndex, CommandStatus.Success);
             }
 
-            return true;
+            return { success: true };
 
         } catch (error: any) {
             this.log(`❌ Status: Failed\n`);
@@ -487,7 +491,7 @@ export class UtilityRunner {
                 );
             }
 
-            return false;
+            return { success: false, errorMessage: this.truncateError(errorMessage, 500) };
         }
     }
 
