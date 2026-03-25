@@ -51,7 +51,7 @@ export class AiToolsTreeProvider implements vscode.TreeDataProvider<AiToolsTreeI
             return Promise.resolve(this.getRootItems());
         }
 
-        if (element.contextValue === 'aiToolGroup') {
+        if (element.contextValue === 'aiToolGroup' || element.contextValue === 'aiToolGroupGlobal') {
             return Promise.resolve(this.getSkillItems(element));
         }
 
@@ -73,9 +73,14 @@ export class AiToolsTreeProvider implements vscode.TreeDataProvider<AiToolsTreeI
             empty.tooltip = new vscode.MarkdownString(
                 '**No AI tool directories detected.**\n\n' +
                 'The following paths are scanned automatically:\n\n' +
-                '- `.claude/agents/` – Claude sub-agents\n' +
-                '- `.claude/commands/` – Claude slash commands\n' +
-                '- `.cursor/rules/` – Cursor rules / agents\n' +
+                '- `.claude/agents/` – Claude sub-agents (project)\n' +
+                '- `.claude/skills/` – Claude skills (project)\n' +
+                '- `.claude/commands/` – Claude slash commands (project)\n' +
+                '- `.cursor/rules/` – Cursor rules / agents (project)\n' +
+                '- `~/.claude/skills/` – Claude skills (global)\n' +
+                '- `~/.claude/agents/` – Claude agents (global)\n' +
+                '- `~/.cursor/skills/` – Cursor skills (global)\n' +
+                '- `~/.cursor/agents/` – Cursor agents (global)\n' +
                 '- `.agents/workflows/` – Antigravity workflows\n\n' +
                 'Use the **+** button above to add a custom path.',
                 true
@@ -109,22 +114,28 @@ export class AiToolsTreeProvider implements vscode.TreeDataProvider<AiToolsTreeI
 
     private buildGroupItem(group: AiToolGroup): AiToolsTreeItem {
         const skillCount = group.skills.length;
+        const isGlobal = group.isGlobal === true;
+
         const label = group.toolType === 'custom'
             ? `${group.category}`
-            : `${group.label}  ›  ${group.category}`;
+            : isGlobal
+                ? `${group.label}  ›  ${group.category}  (Global)`
+                : `${group.label}  ›  ${group.category}`;
 
         const item = new AiToolsTreeItem(
             label,
             vscode.TreeItemCollapsibleState.Expanded
         );
-        item.contextValue = 'aiToolGroup';
+        item.contextValue = isGlobal ? 'aiToolGroupGlobal' : 'aiToolGroup';
         item.description = `${skillCount} ${skillCount === 1 ? 'file' : 'files'}`;
-        item.iconPath = toolIcon(group.toolType);
+        item.iconPath = toolIcon(group.toolType, isGlobal);
         item.groupSourcePath = group.sourcePath;
         item.toolType = group.toolType;
 
+        const globalNote = isGlobal ? '🌐 **Global** — from your home directory\n\n' : '';
         item.tooltip = new vscode.MarkdownString(
             `**${label}**\n\n` +
+            globalNote +
             `📁 \`${group.sourcePath}\`\n\n` +
             `${skillCount} skill${skillCount !== 1 ? 's' : ''} found\n\n` +
             (skillCount > 0
@@ -141,7 +152,7 @@ export class AiToolsTreeProvider implements vscode.TreeDataProvider<AiToolsTreeI
     // ── Skill children ────────────────────────────────────────────────
 
     private getSkillItems(groupItem: AiToolsTreeItem): AiToolsTreeItem[] {
-        // Find the group this node belongs to
+        // Find the group this node belongs to (handle both project and global)
         const group = this.groups.find(g => g.sourcePath === groupItem.groupSourcePath);
         if (!group || group.skills.length === 0) {
             const empty = new AiToolsTreeItem(
@@ -188,10 +199,18 @@ export class AiToolsTreeProvider implements vscode.TreeDataProvider<AiToolsTreeI
 
 // ── Icon helpers ──────────────────────────────────────────────────────
 
-function toolIcon(toolType: AiToolType): vscode.ThemeIcon {
+function toolIcon(toolType: AiToolType, isGlobal = false): vscode.ThemeIcon {
+    // Global groups get a subtle tint shift to hint at their scope.
+    // (VSCode doesn't support badge overlays via ThemeIcon, so we rely on the label.)
     switch (toolType) {
-        case 'claude': return new vscode.ThemeIcon('comment-discussion', new vscode.ThemeColor('charts.orange'));
-        case 'cursor': return new vscode.ThemeIcon('edit', new vscode.ThemeColor('charts.blue'));
+        case 'claude': return new vscode.ThemeIcon(
+            isGlobal ? 'globe' : 'comment-discussion',
+            new vscode.ThemeColor('charts.orange')
+        );
+        case 'cursor': return new vscode.ThemeIcon(
+            isGlobal ? 'globe' : 'edit',
+            new vscode.ThemeColor('charts.blue')
+        );
         case 'antigravity': return new vscode.ThemeIcon('rocket', new vscode.ThemeColor('charts.purple'));
         case 'custom': return new vscode.ThemeIcon('folder-opened', new vscode.ThemeColor('charts.yellow'));
     }

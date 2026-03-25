@@ -348,6 +348,11 @@ export function activate(context: vscode.ExtensionContext) {
         (item: AiToolsTreeItem) => handleCopyAiSkill(item)
     );
 
+    const revealAiSkillInExplorerCommand = vscode.commands.registerCommand(
+        'flutter-toolbox.revealAiSkillInExplorer',
+        (item: AiToolsTreeItem) => handleRevealAiSkillInExplorer(item)
+    );
+
     context.subscriptions.push(
         buildApkCommand,
         buildIpaCommand,
@@ -400,6 +405,7 @@ export function activate(context: vscode.ExtensionContext) {
         addAiToolPathCommand,
         removeAiToolPathCommand,
         copyAiSkillCommand,
+        revealAiSkillInExplorerCommand,
         workspaceFoldersChangeListener,
         treeView,
         aiToolsView,
@@ -2338,6 +2344,23 @@ async function handleCopyAiSkill(item: AiToolsTreeItem): Promise<void> {
         vscode.window.showErrorMessage(`Failed to copy file: ${error.message}`);
     }
 }
+
+/**
+ * Reveal a skill file in VS Code's Explorer panel.
+ */
+async function handleRevealAiSkillInExplorer(item: AiToolsTreeItem): Promise<void> {
+    try {
+        if (!item.skillFilePath) {
+            vscode.window.showWarningMessage('No file path found.');
+            return;
+        }
+        const uri = vscode.Uri.file(item.skillFilePath);
+        await vscode.commands.executeCommand('revealInExplorer', uri);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to reveal file: ${error.message}`);
+    }
+}
+
 
 /**
  * Refresh the AI Tools view (re-scan all paths).

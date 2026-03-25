@@ -247,6 +247,11 @@
         "icon": "$(clippy)"
       },
       {
+        "command": "flutter-toolbox.revealAiSkillInExplorer",
+        "title": "AI Tools: Reveal in Explorer",
+        "icon": "$(folder-opened)"
+      },
+      {
         "command": "flutter-toolbox.refreshAiTools",
         "title": "AI Tools: Refresh",
         "icon": "$(refresh)"
@@ -307,9 +312,19 @@
           "group": "inline"
         },
         {
+          "command": "flutter-toolbox.refreshAiTools",
+          "when": "view == aiToolsView && viewItem == aiToolGroupGlobal",
+          "group": "inline"
+        },
+        {
+          "command": "flutter-toolbox.revealAiSkillInExplorer",
+          "when": "view == aiToolsView && viewItem == aiSkill",
+          "group": "inline@1"
+        },
+        {
           "command": "flutter-toolbox.copyAiSkill",
           "when": "view == aiToolsView && viewItem == aiSkill",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "command": "flutter-toolbox.removeAiToolPath",

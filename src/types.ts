@@ -111,6 +111,7 @@ export interface AiSkill {
   filePath: string;      // absolute path
   toolType: AiToolType;
   category: string;      // e.g. 'Agents', 'Commands', 'Rules'
+  isGlobal?: boolean;    // true when discovered from ~/.claude or ~/.cursor
 }
 
 export interface AiToolGroup {
@@ -119,4 +120,5 @@ export interface AiToolGroup {
   category: string;      // 'Agents', 'Commands', 'Rules', 'Custom'
   skills: AiSkill[];
   sourcePath: string;    // the folder this group was scanned from
+  isGlobal?: boolean;    // true when discovered from ~/.claude or ~/.cursor
 }

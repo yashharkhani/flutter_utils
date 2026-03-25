@@ -9,6 +9,7 @@
  */
 
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AiSkill, AiToolGroup, AiToolType } from './types';
@@ -115,6 +116,32 @@ const TOOL_DIR_CONFIGS: ToolDirConfig[] = [
     {
         toolType: 'antigravity', label: 'Antigravity', category: 'Workflows',
         relPath: '_agent/workflows', extensions: ['.md']
+    },
+];
+
+/**
+ * Global tool directories — relative to the user's home directory (~/).
+ * Skills/agents discovered here are tagged with isGlobal = true.
+ */
+const GLOBAL_TOOL_DIR_CONFIGS: ToolDirConfig[] = [
+    // ── Global Claude ───────────────────────────────────────────────────
+    {
+        toolType: 'claude', label: 'Claude', category: 'Skills',
+        relPath: '.claude/skills', extensions: ['.md'], dirBased: true
+    },
+    {
+        toolType: 'claude', label: 'Claude', category: 'Agents',
+        relPath: '.claude/agents', extensions: ['.md'], dirBased: true
+    },
+
+    // ── Global Cursor ───────────────────────────────────────────────────
+    {
+        toolType: 'cursor', label: 'Cursor', category: 'Skills',
+        relPath: '.cursor/skills', extensions: ['.md'], dirBased: true
+    },
+    {
+        toolType: 'cursor', label: 'Cursor', category: 'Agents',
+        relPath: '.cursor/agents', extensions: ['.md']
     },
 ];
 
@@ -316,6 +343,12 @@ export function discoverSkills(
         }
     }
 
+    // ── Global paths (~/.claude, ~/.cursor) ───────────────────────────────
+    const globalGroups = discoverGlobalSkills();
+    for (const g of globalGroups) {
+        groups.push(g);
+    }
+
     // ── Custom paths ──────────────────────────────────────────────────────
     const customPaths = getCustomScanPaths(context, projectRoot);
     for (const customPath of customPaths) {
@@ -341,4 +374,53 @@ export function discoverSkills(
     }
 
     return groups;
+}
+
+/**
+ * Scan the user's global home directory for ~/.claude and ~/.cursor
+ * skills/agents directories. All discovered items are tagged isGlobal = true
+ * and appear in separate groups from project-local items.
+ */
+function discoverGlobalSkills(): AiToolGroup[] {
+    const homeDir = os.homedir();
+    // key = toolType::category::global
+    const mergedGroups = new Map<string, AiToolGroup>();
+
+    for (const cfg of GLOBAL_TOOL_DIR_CONFIGS) {
+        const absPath = path.join(homeDir, cfg.relPath);
+        if (!fs.existsSync(absPath)) { continue; }
+
+        const key = `${cfg.toolType}::${cfg.category}::global`;
+
+        if (!mergedGroups.has(key)) {
+            mergedGroups.set(key, {
+                toolType: cfg.toolType,
+                label: cfg.label,
+                category: cfg.category,
+                skills: [],
+                sourcePath: absPath,
+                isGlobal: true,
+            });
+        }
+
+        const group = mergedGroups.get(key)!;
+        const newSkills = cfg.dirBased
+            ? scanDirBased(absPath, cfg.toolType, cfg.category)
+            : scanFileBased(absPath, cfg.toolType, cfg.category, cfg.extensions);
+
+        for (const s of newSkills) {
+            if (!group.skills.find(x => x.filePath === s.filePath)) {
+                group.skills.push({ ...s, isGlobal: true });
+            }
+        }
+    }
+
+    const result: AiToolGroup[] = [];
+    for (const group of mergedGroups.values()) {
+        if (group.skills.length > 0) {
+            group.skills.sort((a, b) => a.name.localeCompare(b.name));
+            result.push(group);
+        }
+    }
+    return result;
 }
